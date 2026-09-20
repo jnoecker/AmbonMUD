@@ -1,0 +1,473 @@
+zone: krioshaion
+startRoom: the_veil_s_edge
+rooms:
+  the_veil_s_edge:
+    title: The Veil's Edge
+    description: You stand at the threshold where the living world fades into grey mist, a cold wind carrying the scent of
+      distant memory. Behind you lies warmth and color; ahead, only the perpetual twilight of Krioshaion stretches
+      endlessly.
+    exits:
+      n: whispering_mist_plains
+      e: phantom_forest_threshold
+      s: the_heart_of_phantom_wood
+    image: 5d02bcbda531e64a4163f1b4dbc1b9fd21adc7db700ea05bdbd6cac644640d61.jpg
+  whispering_mist_plains:
+    title: Whispering Mist Plains
+    description: Barren grey grassland extends in all directions, half-obscured by thick mist that muffles even your own
+      footsteps. The whispers of countless departed drift through the air like wind, though no breeze can be felt.
+    exits:
+      s: the_veil_s_edge
+      e: the_forgotten_path
+      n: underbed_hollow:bridge_of_whispers
+    image: 4f9519354c0ab53fc40816010d955c60c0ec6b5314e2995149c996b9966eba21.jpg
+  phantom_forest_threshold:
+    title: Phantom Forest Threshold
+    description: Skeletal trees rise from the mist ahead, their bare branches reaching upward like supplicating hands. No
+      leaves crown these wood-bones, and they cast no shadows despite the grey light that pervades this realm.
+    exits:
+      w: the_veil_s_edge
+      n: the_forgotten_path
+      s: wisps_congregation
+      e: hollow_s_edge
+    image: 62e222f2474c8e3558513b708779499d225e5ad2ac4bce9fba9663e88fe16960.jpg
+  the_heart_of_phantom_wood:
+    title: The Heart of Phantom Wood
+    description: Ancient bone-trees crowd together in this desolate forest, their twisted trunks gnarled with the anguish of
+      centuries. The mist here is thicker, clinging to you like cold breath, and somewhere in the gloom you sense other
+      presences stirring.
+    exits:
+      n: the_veil_s_edge
+      e: wisps_congregation
+      w: bone_strewn_hollow
+    image: 20a552c417554db9faf7a92dd9b46986fb6ac4488b1a1dfc4f914cf44162a138.jpg
+  wisps_congregation:
+    title: Wisps' Congregation
+    description: A gathering of pale luminous orbs drift and hover in a small clearing, their ethereal forms pulsing with
+      the faint light of half-forgotten memories. They seem to acknowledge your presence with a subtle dimming and
+      brightening, as if communicating in a language beyond words.
+    exits:
+      w: the_heart_of_phantom_wood
+      e: the_memory_stones
+      n: phantom_forest_threshold
+    image: 76890a64edb2f01a4fe9e8f9beb3e829b23f96d462bb01205c7003ed689fb646.jpg
+  bone_strewn_hollow:
+    title: Bone-Strewn Hollow
+    description: This depression in the land is littered with the grey, crumbling remains of countless skeletal creatures,
+      their final resting place a monument to the suffering that binds them to this realm. The air grows colder here,
+      heavy with despair.
+    exits:
+      e: the_heart_of_phantom_wood
+    image: 0409b4cdf692b289f13cb81d8e736cbbd63e33e2e72d502276fee23b0d6fb9a3.jpg
+  the_forgotten_path:
+    title: The Forgotten Path
+    description: A winding trail of packed grey earth cuts through the mist, worn smooth by the endless shuffling of
+      spectral feet. Strange carved stones mark its edges, bearing inscriptions in a language that makes your head ache
+      to read.
+    exits:
+      s: phantom_forest_threshold
+      n: ethereal_crossroads
+      e: shrouded_ravine
+      w: whispering_mist_plains
+    image: a29e0f35453b5106749f6250b78b73b8c9d841db8bf1983e59ab7125b54d8be3.jpg
+  ethereal_crossroads:
+    title: Ethereal Crossroads
+    description: Four paths intersect here, each fading into mist in slightly different directions. A cairn of pale stones
+      stands at the center, and above it, wisps circle in a deliberate, purposeful pattern.
+    exits:
+      s: the_forgotten_path
+      e: driftwood_strand
+    image: 90a0ab37989e895483bdff8f4b2cf6362adad494f15143130390c160a6218912.jpg
+  shrouded_ravine:
+    title: Shrouded Ravine
+    description: A deep gorge opens before you, its depths lost in shadow and mist. The walls are composed of compressed
+      memories—vague shapes and half-formed scenes flickering across the stone as you watch.
+    exits:
+      w: the_forgotten_path
+      e: mist_shrouded_sepulcher
+      n: driftwood_strand
+    image: 58595bf6076930da4e451584d79c577baa74fd1fcf8c4a30f35568c867d39334.jpg
+  the_memory_stones:
+    title: The Memory Stones
+    description: Massive grey monoliths protrude from the mist in this desolate plain, each one carved with the names and
+      final moments of the departed. Your eyes water trying to read them, as though the stone itself resists
+      comprehension.
+    exits:
+      w: wisps_congregation
+      n: hollow_s_edge
+    image: 5c429d147bd07ecb84cd0b672abeb86dfb208e76e9d029ea9cc1e4d75f3cffb2.jpg
+  hollow_s_edge:
+    title: Hollow's Edge
+    description: The ground beneath your feet becomes treacherous here, cracked and unstable, as if the boundary between
+      dream and void grows dangerously thin. The mist swirls with more urgency, and whispers grow louder.
+    exits:
+      s: the_memory_stones
+      e: the_wailing_grove
+      w: phantom_forest_threshold
+    image: 0f96227c18c31fc1163b101c3342edfff32908d69b650d09f984a4cd043fcf92.jpg
+  the_wailing_grove:
+    title: The Wailing Grove
+    description: Within this copse of bone-trees, the whispers coalesce into a sorrowful keening that resonates through your
+      very being. The air is thick with anguish, and you feel the weight of countless regrets pressing down upon you.
+    exits:
+      w: hollow_s_edge
+    image: f0e260cc4bb9f1b0e1d10037bc47a55699db44f01c132182c4c0ae6d2d475426.jpg
+  mist_shrouded_sepulcher:
+    title: Mist-Shrouded Sepulcher
+    description: An ancient structure looms before you, its architecture neither fully solid nor wholly translucent. Carved
+      from dream-stone and sorrow, it breathes with the collected grief of ages.
+    exits:
+      w: shrouded_ravine
+      e: the_spectral_garden
+    image: c69ebfc45c47b3c83c46ccc7691f5e6b0033617a6995ae39967950124cf684c0.jpg
+  the_spectral_garden:
+    title: The Spectral Garden
+    description: What might once have been a garden lies here, twisted into something both beautiful and terrible—phantom
+      flowers that bloom in shades of grey and white, their petals falling upward into the mist.
+    exits:
+      w: mist_shrouded_sepulcher
+      s: the_choir_s_chamber
+    image: 6d3cb93d0df9a4ed0737b4a6817313844294cb425597e51c44ac3d92a7796a15.jpg
+  driftwood_strand:
+    title: Driftwood Strand
+    description: Impossible driftwood and weathered bone litter this surreal shoreline, despite no water being present. The
+      grey sand crunches beneath your feet with an unsettling sound, like walking on compressed sighs.
+    exits:
+      s: shrouded_ravine
+      e: pallid_marshland
+      w: ethereal_crossroads
+      n: the_drowning_fields
+    image: 37bfba6c79f427c97a0dea6fc9674c0eac1d69b1b957a0a2e3c234a7768b9c5e.jpg
+  the_choir_s_chamber:
+    title: The Choir's Chamber
+    description: A vast amphitheater opens up here, its stone seats filled with translucent figures whose mouths move in
+      perfect unison, creating the endless whisper-chorus that defines this realm. The sound is almost hypnotic.
+    exits:
+      n: the_spectral_garden
+      e: obsidian_mirror_pool
+    image: 62c9a79a9d92e8402e162bcf6bcc07f4188b530ee8d84fd617cf7a94378b06bc.jpg
+  obsidian_mirror_pool:
+    title: Obsidian Mirror Pool
+    description: A perfectly still pool of dark water reflects nothing, its surface smooth as obsidian and just as
+      lightless. The mist seems to avoid it, creating a small clearing of unusual clarity around its perimeter.
+    exits:
+      w: the_choir_s_chamber
+      s: the_labyrinth_of_sighs
+    image: 93c0937c99dfcd71e02153c60a68321ae5dd68a10e7b5e3b59a6b39dbe5fb44a.jpg
+  the_labyrinth_of_sighs:
+    title: The Labyrinth of Sighs
+    description: Twisted paths lead in impossible directions through walls of condensed mist that shift and reform. Each
+      turn brings you to another familiar-looking corridor, and you have the unsettling sense of walking through your
+      own half-remembered dreams.
+    exits:
+      n: obsidian_mirror_pool
+    image: c8126823eea98fdce7126f3cb0730944cfff60de022b481b083fef1fc719d252.jpg
+  pallid_marshland:
+    title: Pallid Marshland
+    description: Thick, colorless murk clings to the ground here, neither quite mud nor fog. Strange pale reeds rise from
+      the depths, and you can hear the mournful call of creatures that may never have been fully alive.
+    exits:
+      w: driftwood_strand
+      e: the_sentinel_s_post
+      n: cascade_of_lost_echoes
+    image: 447db866b30dbfb7a77000ecf2d347ce36585fb0369bf65befddc83c4a81afa4.jpg
+  the_sentinel_s_post:
+    title: The Sentinel's Post
+    description: A massive skeletal form stands motionless at the edge of a cliff, its bone-frame gaunt and ancient. It
+      neither moves nor acknowledges your presence, simply staring out into the grey expanse with hollow eye-sockets
+      that somehow convey eternal sorrow.
+    exits:
+      w: pallid_marshland
+      n: fractured_causeway
+    image: 1f1a6aef361e9d45d441089811359a9c2bcfeca2e4da1615c75abe4bce5ad332.jpg
+  cascade_of_lost_echoes:
+    title: Cascade of Lost Echoes
+    description: In this peculiar space, your footsteps and breath generate echoes that are not quite your own—fainter,
+      older versions of sounds that speak of previous visitors. They layer upon each other, creating a chorus of phantom
+      noise.
+    exits:
+      s: pallid_marshland
+      w: the_drowning_fields
+    image: 28b19abdea0267ac8c2938e6d8bbdaa5eabcdb824ea0c50013f9fc01f7c9ba98.jpg
+  the_drowning_fields:
+    title: The Drowning Fields
+    description: Though no water surrounds you, this field feels submerged—the mist presses down like water, and movement
+      becomes sluggish and difficult. The ground squelches with each step as if sodden with centuries of tears.
+    exits:
+      e: cascade_of_lost_echoes
+      w: ashen_hilltop
+      n: the_codex_hall
+      s: driftwood_strand
+    image: 6205d9536c4e480b304215c1b77167bb9ab83eceae3df9008166ac6c28d8934b.jpg
+  ashen_hilltop:
+    title: Ashen Hilltop
+    description: From this elevated point, the grey landscape sprawls before you in all directions, an endless vista of mist
+      and desolation. Somewhere in that haze, you sense the presence of something ancient and vast, watching and
+      waiting.
+    exits:
+      e: the_drowning_fields
+      w: the_threshold_beyond
+    image: 582b77f83db6d0debcc34f4f0784cbbd448e6ee71973711421cd81eec2bcb97f.jpg
+  the_codex_hall:
+    title: The Codex Hall
+    description: Shelves of translucent stone hold countless tomes and scrolls that shimmer with faint luminescence. The
+      knowledge contained within pulses just beyond comprehension, written in languages that exist only in dreams.
+    exits:
+      s: the_drowning_fields
+      e: the_weavers_loom
+    image: f8967ab97609a7af2246d23b6c1dc32121b11b78ff45c67feb3f279507837b0f.jpg
+  fractured_causeway:
+    title: Fractured Causeway
+    description: A broken bridge of pale stone stretches across an impossible chasm, its planks cracked and worn smooth by
+      spectral traffic. Below, the mist swirls in patterns that almost seem intentional.
+    exits:
+      s: the_sentinel_s_post
+      n: the_pale_citadel
+      e: chamber_of_echoed_names
+    image: 7d6b5739e311a3025ccd95cd53a227e38ae4852f2f5e287ed416a4dc92c7c38d.jpg
+  the_pale_citadel:
+    title: The Pale Citadel
+    description: Towering walls of bone-white stone rise before you, their surfaces carved with the likenesses of the
+      departed in exquisite and haunting detail. This monument to loss seems to pulse with a strange, inverted vitality.
+    exits:
+      s: fractured_causeway
+    image: 7f7fbb284916e82dd430d5f128f51dd68c07305cc51f29ae39489f2e1a969ffc.jpg
+  chamber_of_echoed_names:
+    title: Chamber of Echoed Names
+    description: Within these stone walls, the whispers coalesce into discernible voices calling out names—your name among
+      them, spoken in voices you almost recognize. The sound is both intimate and utterly alien.
+    exits:
+      w: fractured_causeway
+    image: 3a64e026ce328e8803260b9595fd64c643a033cf393a00945751b993d8d0fb15.jpg
+  the_weavers_loom:
+    title: The Weavers' Loom
+    description: An impossibly large loom occupies this space, its threads composed of pure mist and memory. A figure tends
+      it ceaselessly, weaving the final threads of countless lives into a tapestry of ultimate sorrow.
+    exits:
+      w: the_codex_hall
+      n: sanctuary_of_forgetting
+    image: 7d343b9a141cb4272b4f2c417f90faf1399097f0cabe749d10c537a9c6ddd707.jpg
+  sanctuary_of_forgetting:
+    title: Sanctuary of Forgetting
+    description: This chamber offers something unique to Krioshaion—a sense of peace. The mist here is gentle and warm, and
+      for a brief moment, you feel the burden of existence grow lighter, as though forgetting itself were a kindness.
+    exits:
+      s: the_weavers_loom
+    image: fced32c26840c795385fc038a74e0be509c38d40f8e5fd7e73188c3de6834726.jpg
+  the_threshold_beyond:
+    title: The Threshold Beyond
+    description: Here, at the far edge of Krioshaion, the mist grows so thick that sight itself becomes impossible. You
+      sense that beyond lies something neither memory nor dream, neither life nor death—the true mystery that awaits us
+      all.
+    exits:
+      e: ashen_hilltop
+    image: a1837571b1102b3d4f39dcd970b4f7b4f586c4cb49c86ec086b126486e9e4427.jpg
+lifespan: 30
+levelBand:
+  min: 10
+  max: 15
+difficultyHint: standard
+image:
+  room: 6432de9d54e9e903ce4db9898d558d2ce211cb8373e253bc8744745ab2422cab.jpg
+  mob: 2096a9b46958af028a52ea8e066e8e3f2e13f64a10a0dec5656375f35ede2cae.png
+  item: e6f9ddb013b2341c5bb2dd39375636c66f30e7ebe63d36f4fa6b7d56d75b3e45.png
+mobs:
+  bone_wanderer:
+    name: A Bone Wanderer
+    description: A skeletal creature of translucent form, shuffling through the mist with an aimless, eternal gait. Its
+      eye-sockets glow faintly with residual awareness, and it moves as though compelled by forces only it can perceive.
+    tier: weak
+    spawns:
+      - room: whispering_mist_plains
+    level: 10
+    image: 459a09aa7e0f6cd6d0f6461ec6472839e72a1faaeec39612695806873ff41e40.png
+  grey_spectre:
+    name: A Grey Spectre
+    description: A half-corporeal phantom that drifts through the mist, its form wavering between solid and gaseous. It
+      moans softly, a sound of endless loss and regret that seems to emanate from its very being.
+    tier: standard
+    spawns:
+      - room: the_heart_of_phantom_wood
+    level: 13
+    image: 93edc9593360227cfec37e867e8936b62372607c938d7031feb29a2eb0281e01.png
+  memory_wisp_cluster:
+    name: A Cluster of Memory Wisps
+    description: A gathering of pale luminous orbs that swirl together in a deliberate pattern, their collective presence
+      creating a faint resonance that makes your thoughts feel scattered and distant.
+    tier: weak
+    spawns:
+      - room: wisps_congregation
+    level: 10
+    image: 826913bbd7ce64cfb93e74a7821462931e59139b93040d59b51aa8d701ad5f40.png
+  haunted_sentinel:
+    name: A Haunted Sentinel
+    description: A towering skeletal form, more solid than most spirits of this realm, clad in the tattered remains of
+      ancient armor. It stands eternal vigil, and its presence carries the weight of countless years of lonely watching.
+    tier: standard
+    spawns:
+      - room: the_sentinel_s_post
+    level: 13
+    image: 26f85a2eaace6bbc1f645985fafd9380949b0d085439ed176f70e37337e76e62.png
+  grief_shade:
+    name: A Grief Shade
+    description: A darker manifestation of spectral sorrow, this creature is composed almost entirely of anguish given form.
+      It moves with purpose unlike other spirits, and the temperature drops significantly in its presence.
+    tier: elite
+    spawns:
+      - room: the_wailing_grove
+    level: 14
+    image: 2f2a46b47862bcc4c89be151cee7f8cf2aab1e228ab0b1c88e6ac4ca6eb4b72d.png
+  bone_chorus:
+    name: A Bone Chorus
+    description: Three skeletal figures locked in an eternal lamentation, their voices harmonizing in a keening wail that
+      echoes through the mist. They move in synchronized despair, as if bound by grief itself.
+    tier: standard
+    spawns:
+      - room: the_choir_s_chamber
+    level: 13
+    image: 60f865b09db19f2786a016ff31cc13f71ab718e9559790be3a0508def4271f26.png
+  forgotten_guardian:
+    name: A Forgotten Guardian
+    description: Once, this creature served a purpose now lost to time and dissolution. It maintains a vigilant patrol
+      despite the obvious deterioration of its form, driven by duty transcending death itself.
+    tier: elite
+    spawns:
+      - room: the_pale_citadel
+    level: 14
+    image: 1a8bdff8a8e7af405f517365f278a1b88cfa9f3647a30e63a407ba15dafcac1a.png
+  void_stalker:
+    name: A Void Stalker
+    description: A predatory spirit that hunts the grey wastes with an intelligence the other dead seem to lack. Its form is
+      sharp and defined, and it moves with terrible, focused purpose through the mist.
+    tier: elite
+    spawns:
+      - room: hollow_s_edge
+    level: 14
+    image: 0cbaada2defa4e6e609d2721cd04851806c2a4d17e732205b9f34f2b97dd4343.png
+  weaver_of_sorrows:
+    name: The Weaver of Sorrows
+    description: An ancient entity that tends the great loom with skeletal hands that move with impossible precision. It
+      does not acknowledge the world, lost entirely in its work of eternal thread-craft, and disturbing it may come at
+      great cost.
+    tier: boss
+    spawns:
+      - room: the_weavers_loom
+    level: 15
+    image: 86effa4e088809762057253ffcbcfd607b94721534f8d14df19f2b132f55ef2a.png
+  pallid_shambler:
+    name: A Pallid Shambler
+    description: A twisted form that lurches through the marshy ground, its movement ungainly yet purposeful. Wisps of pale
+      luminescence cling to its decaying frame, and it seems to draw sustenance from the mist itself.
+    tier: standard
+    spawns:
+      - room: pallid_marshland
+    level: 13
+    image: 26da66f834076a2c5753d9a2bcba5c9538f4de52d96471b52a6ec6ba82076e34.png
+  echo_wraith:
+    name: An Echo Wraith
+    description: A spirit composed entirely of accumulated echoes and repeated words, its form constantly shifting as if
+      trying to remember what it once was. It speaks in layered voices that echo one another endlessly.
+    tier: standard
+    spawns:
+      - room: cascade_of_lost_echoes
+    level: 13
+    image: a0f502aeddbc53c140a65b2b17367aeeaaa49adb5f096f03fcd10703a845ab13.png
+  requiem_keeper:
+    name: The Requiem Keeper
+    description: A spectral guardian of the lost, this being maintains the memorial stones with meticulous care despite its
+      hollow nature. It radiates sorrow so profound that merely seeing it brings a weight to the heart.
+    tier: elite
+    spawns:
+      - room: the_memory_stones
+    level: 14
+    image: ae14b9a519853cb11dd39b753e02b0c81ae3a934c3ec9bceb113ff9d7e71ebf2.png
+items:
+  veil_shroud_cloak:
+    displayName: Veil Shroud Cloak
+    description: A cloak woven from mist-cloth that seems to absorb light rather than reflect it. Wearing it fills your mind
+      with the whispers of Krioshaion, granting understanding of the language of the dead.
+    slot: body
+    armor: 17
+    level: 12
+    tier: common
+    archetype: armor
+    image: c775d09d3c46121a87c27bed91eb9af05782c11e34734b9d08e23d22c43996d2.png
+    keyword: veil_shroud_cloak
+  bone_caller_staff:
+    displayName: Bone Caller's Staff
+    description: A staff carved from the ancient bone of something that died long ago. It pulses with a faint grey light and
+      seems to call to the skeletal creatures of this realm, making them less hostile to its bearer.
+    slot: weapon
+    damage: 9
+    level: 12
+    tier: common
+    archetype: damage
+    image: 4e6bf95e91e6d36f25f4d39405a8cbd53e104b980a59cd6ae807d652a22d669a.png
+    keyword: bone_caller_staff
+  phantom_helm:
+    displayName: Phantom Helm
+    description: A helmet that exists only partially in the material world, its translucent surface showing scenes of
+      distant memories. Those who wear it find themselves resistant to the maddening effects of Krioshaion's whispers.
+    slot: head
+    armor: 9
+    level: 12
+    tier: common
+    archetype: armor
+    image: 608eaf3ce8169571976df5217609d5476e6acf8d7bedf5664f5e708eb1545708.png
+    keyword: phantom_helm
+  spectral_hands:
+    displayName: Spectral Gauntlets
+    description: Gloves that shimmer between solid and ethereal, allowing you to grasp both material and dream-touched
+      objects with equal ease. They grow cold in the presence of true spirits.
+    slot: hands
+    armor: 9
+    level: 12
+    tier: common
+    archetype: armor
+    image: 7b67533f895a472fe06aa24051f541480a23c84bbf455b21c86c528a52a59c05.png
+    keyword: spectral_hands
+  grave_marker_blade:
+    displayName: Grave Marker Blade
+    description: A weapon carved from dream-stone and carved with the names of the forgotten dead. Each name etched upon it
+      represents a lost soul, and the blade hums faintly with their collective sorrow.
+    slot: weapon
+    damage: 9
+    level: 12
+    tier: common
+    archetype: damage
+    image: d0fad3cb5303e7711bef5ce5f330bcfb33929c650f6754bb3b8b5ed3604910dd.png
+    keyword: grave_marker_blade
+  wisp_lantern:
+    displayName: Wisp Lantern
+    description: A lantern containing a captive memory-wisp, its pale light illuminating the mist around you and revealing
+      truths hidden by shadow. The wisp within seems almost grateful for the purpose.
+    room: wisps_congregation
+    image: fc75c618abba8fe795272d81ed70e14668b7e120d1f21fed262def44b0bb75dd.png
+    keyword: wisp_lantern
+  memorial_scroll:
+    displayName: Memorial Scroll
+    description: An ancient scroll bearing the names and epitaphs of those who have passed through Krioshaion. Reading it
+      fills you with melancholy wisdom and understanding of this forsaken place.
+    room: the_codex_hall
+    image: ef316e743e243f53b28dc5fba383732cffa7d3042f651882ca97689c6e1a394f.png
+    keyword: memorial_scroll
+  remembrance_stone:
+    displayName: Remembrance Stone
+    description: A small grey stone from the Memory Stones, warm to the touch despite the cold of this realm. Carrying it
+      grants fleeting visions of the life once lived by the soul it commemorates.
+    room: the_memory_stones
+    image: 3a9aca67b2103793d77174b62188bced93982244bb36d29399dcbaa894d08c46.png
+    keyword: remembrance_stone
+  dream_mirror_shard:
+    displayName: Dream Mirror Shard
+    description: A fragment of dark reflective material from the obsidian pool, showing not your face but your deepest
+      regrets. Its presence offers terrible clarity about the choices that brought you to this realm.
+    room: obsidian_mirror_pool
+    image: 98db334f8a2aff63a98c18febd95aae55c8c594fd65e3fc14d8c5bc45480ff8d.png
+    keyword: dream_mirror_shard
+  lament_chord_bell:
+    displayName: Lament Chord Bell
+    description: A small bell of pale bone that produces a haunting sound when struck. Its tone carries the collected sorrow
+      of Krioshaion, and spirits seem to recognize it as a symbol of remembrance.
+    room: the_choir_s_chamber
+    image: a0b77299e1d6de23e63dcbdb43d957610e75020a4ead36b4fcbb2ba6ac78d496.png
+    keyword: lament_chord_bell

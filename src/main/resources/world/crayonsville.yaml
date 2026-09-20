@@ -1,0 +1,457 @@
+zone: crayonsville
+startRoom: the_chromatic_welcome_plaza
+rooms:
+  the_chromatic_welcome_plaza:
+    title: The Chromatic Welcome Plaza
+    description: A sprawling town square where the ground itself shimmers with every color imaginable, as if painted by a
+      thousand brushes at once. Towering crayons the size of obelisks mark the cardinal directions, their waxy surfaces
+      gleaming under Auringold's dreamy light.
+    exits:
+      s: the_scarlet_street
+      w: the_azure_fountain_district
+      e: pixel_haven:the_only_road_4
+    image: 9efa6c0cf6643c35d73f71cccc6d56da5aa96c36b59a2779bb312badc7da35a2.jpg
+  the_scarlet_street:
+    title: The Scarlet Street
+    description: Buildings rendered in passionate reds and crimsons line this vibrant thoroughfare, their walls seeming to
+      pulse gently like the heartbeat of the town itself. Painted citizens move through shades of coral and wine, their
+      forms almost translucent in the eternal twilight.
+    exits:
+      n: the_chromatic_welcome_plaza
+      w: the_golden_gallery
+    image: b2cf9f8387e5bbc1b980c2ea8fe97eace28f49d083f6d6ea8443d1d2dbf903bc.jpg
+  the_golden_gallery:
+    title: The Golden Gallery
+    description: A magnificent museum where masterworks hang on walls of burnished gold and amber, each canvas glowing
+      softly from within. The air here smells of old oils and possibility, and gentle artistic echoes seem to linger in
+      every corner.
+    exits:
+      e: the_scarlet_street
+      w: the_indigo_inkwell_archives
+    image: 2f5cee4ea5ddf06719cfd8acda343903dd6b307d56a4674e5ebd1353f6ac1c35.jpg
+  the_azure_fountain_district:
+    title: The Azure Fountain District
+    description: A peaceful quarter built around towering fountains that flow with water rendered in countless shades of
+      blue, from navy to sky to seafoam. The painted stones hum with a soothing melody that feels less heard than
+      remembered.
+    exits:
+      e: the_chromatic_welcome_plaza
+    image: b1cef8899ca8d98919e6a0c5c7706d356ec643c60b418c53374c0ca290a95e32.jpg
+  the_indigo_inkwell_archives:
+    title: The Indigo Inkwell Archives
+    description: A vast repository where scrolls and ledgers are stacked like artistic tributes, their pages stained with
+      inks of deep purple and blue. Spectral fingers seem to turn pages on their own, preserving the history of
+      Crayonsville's creation.
+    exits:
+      e: the_golden_gallery
+      w: the_violet_vendor_s_row
+      n: the_crimson_crafting_hall
+      s: the_magenta_marketplace
+    image: f423fca140df0ee73a901a2f8904a03290da6083bb5572f52dd128a1ec16b7d7.jpg
+  the_violet_vendor_s_row:
+    title: The Violet Vendor's Row
+    description: Market stalls overflow with bottles, tubes, and bars of pigment in every lavender and mauve hue, tended by
+      merchants whose skin shifts between connected shades. The scent of crushed chalk and oil paint hangs thick and
+      sweet.
+    exits:
+      e: the_indigo_inkwell_archives
+      n: the_orange_orchard
+      w: the_vermillion_vigil_tower
+    image: 3900e60223659a3142f2b3dc9f9d6b913c1f17c1d21b327c2f9822a1608c2652.jpg
+  the_orange_orchard:
+    title: The Orange Orchard
+    description: Despite having no true trees, this district blooms with painted fruit and flowering vines in warm golds and
+      burnt oranges that seem to grow directly from the earth. Butterflies that might be painted or real flutter between
+      the blossoms.
+    exits:
+      s: the_violet_vendor_s_row
+      e: the_crimson_crafting_hall
+    image: 2619d35fd097da27146cbf97ac9ebb2eb391182610045a779828199bbb6d0f6d.jpg
+  the_crimson_crafting_hall:
+    title: The Crimson Crafting Hall
+    description: A workshop district alive with the soft sound of brushes on canvas and pencils scratching, where living
+      paintings create art from themselves. The walls drip eternally with wet paint that never quite falls.
+    exits:
+      s: the_indigo_inkwell_archives
+      n: the_emerald_gardens
+      w: the_orange_orchard
+    image: 3278a50a907cdb99e56de8c969f10a43f9d46b17efc86e38cc580dde1e4bc62b.jpg
+  the_magenta_marketplace:
+    title: The Magenta Marketplace
+    description: A bustling trade hub rendered in hot pinks and deep purples, where bartered goods shimmer with the
+      uncertainty of dreams. Voices here sound like colors taste, a synesthetic cacophony of trade and transaction.
+    exits:
+      n: the_indigo_inkwell_archives
+    image: b98437c73289d158150cf7bbf827d719abd2628a83cad4b2054b9c28a6f98075.jpg
+  the_vermillion_vigil_tower:
+    title: The Vermillion Vigil Tower
+    description: A tall watchtower whose walls blaze with deep red and orange hues, standing guard over Crayonsville with
+      watchful determination. From its peak, one can see the entire spectrum of the town laid out below like a living
+      palette.
+    exits:
+      e: the_violet_vendor_s_row
+    image: cbee6cb8770b336642f81422d6833128abd91dd150c53e10c05ff94eec12af61.jpg
+  the_emerald_gardens:
+    title: The Emerald Gardens
+    description: A verdant sanctuary where painted greenery grows in impossible shades of jade, moss, and spring, flowers
+      blooming in complementary jewel tones. The air here carries the phantom scent of rain on morning grass.
+    exits:
+      s: the_crimson_crafting_hall
+      w: the_teal_teacher_s_quarters
+      e: the_sienna_studio_district
+    image: f07cb5e236a9bf387f335932f0d797eab1b9f4ecfd934df7434fd4be3f77e800.jpg
+  the_teal_teacher_s_quarters:
+    title: The Teal Teacher's Quarters
+    description: Tranquil residences painted in soothing blue-greens where the artists of Crayonsville rest and reflect on
+      their dreams. Soft light filters through windows of colored glass, casting gentle shadows in every hue.
+    exits:
+      e: the_emerald_gardens
+      n: the_chartreuse_conservatory
+      w: the_periwinkle_park
+    image: f30d783d9587293f84eb04a9b6d7c74eca33a0fe9e791f08c5ac835a873a2ad0.jpg
+  the_chartreuse_conservatory:
+    title: The Chartreuse Conservatory
+    description: A sprawling greenhouse of yellow-green light where rare pigments and paints are cultivated like exotic
+      plants, their bottles glowing faintly. The very air seems saturated with creative potential.
+    exits:
+      s: the_teal_teacher_s_quarters
+      w: the_turquoise_trading_post
+    image: fcbfa1d7826d39f9409909ed226a99a219d000703e9cad32260e25a0f30cc2ad.jpg
+  the_periwinkle_park:
+    title: The Periwinkle Park
+    description: A recreational space where pathways wind through soft blue-purple landscapes, benches painted in
+      complementary pastels inviting contemplation. The ground here is spongy and forgiving, as if cushioned by paint
+      itself.
+    exits:
+      e: the_teal_teacher_s_quarters
+    image: 07d49f737b42016afab35e438d92805d6627a52d2ece5c0a1c59245d8a248699.jpg
+  the_sienna_studio_district:
+    title: The Sienna Studio District
+    description: Artist studios nestle together in earthy browns and deep reds, their windows glowing with the warm light of
+      creative passion. The sound of inspiration seems almost audible in the streets.
+    exits:
+      w: the_emerald_gardens
+    image: 5c2ce584fb04909eb3f69d0a9e06ef2684512b1944e9c38a9b66bb61fe12cf95.jpg
+  the_turquoise_trading_post:
+    title: The Turquoise Trading Post
+    description: A nexus of commerce where merchants exchange rare pigments and artist supplies under a canopy of brilliant
+      blue-green. The exchange of goods feels like a sacred ritual of art and craft.
+    exits:
+      e: the_chartreuse_conservatory
+      n: the_olive_grove_sanctuary
+      w: the_coral_congregation_hall
+    image: a25572176260d54b5f2da9a8a7297d43ae481a9ec47b20bbea3332bc8b23d3a1.jpg
+  the_olive_grove_sanctuary:
+    title: The Olive Grove Sanctuary
+    description: A quiet refuge rendered in muted greens and browns, where the frantic pace of Crayonsville seems to fade
+      into peaceful silence. Time moves differently here, or perhaps not at all.
+    exits:
+      s: the_turquoise_trading_post
+      w: the_fuchsia_festival_grounds
+      e: the_amber_archive_of_dreams
+    image: c5120f125409621b78148e687a231dc896dd5a74c438e8808738df0a10ca4f31.jpg
+  the_fuchsia_festival_grounds:
+    title: The Fuchsia Festival Grounds
+    description: A wide open plaza bursting with vibrant pink-red hues, where celebration seems perpetually imminent in
+      banners and painted decorations. The energy here crackles with artistic exuberance.
+    exits:
+      e: the_olive_grove_sanctuary
+      w: the_mauve_meditation_chambers
+      s: the_coral_congregation_hall
+    image: f908eb57883c4574e7c5b032f89320d8fdec0413a1fce9519414d334d4899959.jpg
+  the_coral_congregation_hall:
+    title: The Coral Congregation Hall
+    description: A meeting place rendered in warm orange-reds where the citizens of Crayonsville gather to share dreams and
+      visions. The walls seem to listen, absorbing stories in their painted surface.
+    exits:
+      e: the_turquoise_trading_post
+      n: the_fuchsia_festival_grounds
+    image: 8a22ace7916973f34aa090869d51b0462e24a22dad413102d8c5d208b4542816.jpg
+  the_amber_archive_of_dreams:
+    title: The Amber Archive of Dreams
+    description: A library bathed in golden-yellow light where the dreams that shape Crayonsville are catalogued and
+      preserved in bound volumes. The shelves seem to stretch infinitely in the dreamlight.
+    exits:
+      w: the_olive_grove_sanctuary
+      n: the_celadon_cartographer_s_lodge
+    image: 62f8020e33ed989cc45d873482f647a21f9f0ee6eb8944d6f6c26ff092221a8f.jpg
+  the_mauve_meditation_chambers:
+    title: The Mauve Meditation Chambers
+    description: Private rooms painted in calming purples where artists retreat to find inspiration in silence and
+      stillness. Each chamber feels like stepping inside a watercolor wash.
+    exits:
+      e: the_fuchsia_festival_grounds
+      n: the_burnt_sienna_blacksmith_s_forge
+    image: 0ef9c70107b3e9fe799ff9edc38cf7249d65810fe5a4ddb44dd8259631eab300.jpg
+  the_celadon_cartographer_s_lodge:
+    title: The Celadon Cartographer's Lodge
+    description: A mapmaker's haven rendered in soft blue-greens where charts of Crayonsville and neighboring lands are
+      meticulously illustrated on vellum. Compasses made from crystallized pigment sit on every table.
+    exits:
+      s: the_amber_archive_of_dreams
+    image: 9fbc4d34b74d62a82b4dd7fe56f934920c1e96055ff1fbf3a376867ba9ff85dc.jpg
+  the_burnt_sienna_blacksmith_s_forge:
+    title: The Burnt Sienna Blacksmith's Forge
+    description: Despite its name suggesting metalwork, this forge shapes and hardens pigment itself, sending up clouds of
+      colored smoke that smell of earth and creation. The anvils here are painted stone, never dulled by use.
+    exits:
+      s: the_mauve_meditation_chambers
+      n: the_lavender_laboratory
+      w: the_peach_pavilion
+    image: 80af32e468fd6d613481f1f77fdbae5a1319c380ff799aaf9bd68665a9f9fc65.jpg
+  the_lavender_laboratory:
+    title: The Lavender Laboratory
+    description: A place of pigment experimentation where new colors are discovered and old ones refined, bottles and vials
+      glowing like captured starlight. The air shimmers with chromatic possibility.
+    exits:
+      s: the_burnt_sienna_blacksmith_s_forge
+      w: the_rust_red_residency
+    image: d104f837c703cf0f3b82b5a639f94152263b816e8f57fc24deb72af717ae9c98.jpg
+  the_peach_pavilion:
+    title: The Peach Pavilion
+    description: An open-air shelter rendered in soft warm pinks and oranges, where traveling artists display their works
+      and share techniques. The very architecture seems to encourage collaborative creation.
+    exits:
+      e: the_burnt_sienna_blacksmith_s_forge
+      s: the_pistachio_pen_and_ink_house
+      n: the_rust_red_residency
+    image: 13c6630e9d739ebc909795cb4c5375b2d27a27862000c33ef929f234867b0464.jpg
+  the_pistachio_pen_and_ink_house:
+    title: The Pistachio Pen and Ink House
+    description: A shop specializing in fine instruments and writing mediums, its walls a calming pale green that puts
+      artists at ease. Shelves overflow with brushes, nibs, and bottles of ink that shimmer with inner light.
+    exits:
+      n: the_peach_pavilion
+      w: the_crimson_curiosity_cabinet
+      s: the_aquamarine_amphitheater
+    image: 5c838fe92d586f4f9d3198eb4cf2280b5d8661eda5cde61189d3aece44f539ad.jpg
+  the_crimson_curiosity_cabinet:
+    title: The Crimson Curiosity Cabinet
+    description: A collector's wonderland painted in deep reds and burgundies, displaying oddities and treasures from
+      throughout Auringold and beyond. Each item seems to glow slightly, infused with dream-memory.
+    exits:
+      e: the_pistachio_pen_and_ink_house
+    image: 7d4f11f1c1b91592107a4c0aeb4861da06fc10993edad7e1140c48f955b754c4.jpg
+  the_aquamarine_amphitheater:
+    title: The Aquamarine Amphitheater
+    description: A grand performance space painted in brilliant blue-green, where artists showcase their creations and
+      musicians perform compositions inspired by color itself. The acoustics seem to favor the most sincere expression.
+    exits:
+      n: the_pistachio_pen_and_ink_house
+    image: ba9276ba70d396bb31fb2238fbf78ab51a71ba1723c184ddcfecc2c64bccd739.jpg
+  the_rust_red_residency:
+    title: The Rust-Red Residency
+    description: Guest quarters for visiting artists painted in warm earthy tones, offering comfort and inspiration to those
+      passing through Crayonsville. Each room feels like a sanctuary of creative rest.
+    exits:
+      s: the_peach_pavilion
+      n: the_rainbow_s_rest_inn
+      e: the_lavender_laboratory
+    image: 1b44fcf00d5641f71508e1da61bdf5c0b2705950d6cea9185613b913502a207d.jpg
+  the_rainbow_s_rest_inn:
+    title: The Rainbow's Rest Inn
+    description: The heart of Crayonsville's hospitality, a multi-hued establishment that somehow harmoniously blends every
+      color imaginable into a welcoming whole. Its doors promise warmth, lodging, and the fellowship of artists.
+    exits:
+      s: the_rust_red_residency
+    image: 179835888899cff46880245dfeadfb0e786049901a2d47ab493c7b9ccf7360f1.jpg
+lifespan: 30
+levelBand:
+  min: 5
+  max: 5
+difficultyHint: standard
+image:
+  room: 3ad2e499d8aeaa68a2139d2634bbac0282e78be92ae580baea36c0f96dcb6afb.jpg
+  mob: 1469bbc55147b1c02a98a6b55340d97506e4428b39bb4425b0ef84ee99f9b5ac.png
+  item: adbf7cc2ba87b0ff67904d7705d997b2644c9c1793255781aca1f7d56c5abfe2.png
+mobs:
+  painted_sentinel:
+    name: Painted Sentinel
+    description: A living brushstroke given form, rendered in bold strokes of crimson and gold, patrolling with purposeful
+      dedication.
+    tier: standard
+    spawns:
+      - room: the_vermillion_vigil_tower
+    level: 5
+    image: 38e3c667447956171624a497f25a7e05e3115e0a0c3d53ed56e383b738c1491a.png
+  crayon_shade:
+    name: Crayon Shade
+    description: A mischievous wisp of color that has taken quasi-solid form, shifting between warm hues of orange and
+      yellow with impish intent.
+    tier: weak
+    spawns:
+      - room: the_scarlet_street
+    level: 5
+    image: 3400071f75c15ca098c2c3005f8d592153f5ecec5999bf25c12fa4e8680c512c.png
+  pigment_guardian:
+    name: Pigment Guardian
+    description: An elite custodian of Crayonsville's resources, painted in majestic purples and blues, their form radiating
+      authority and artistic mastery.
+    tier: elite
+    spawns:
+      - room: the_violet_vendor_s_row
+    level: 5
+    image: 6c33b8f51fa5024846edd3fdf42729efec5945eb5b1766d0e14dbfb4bf5499e6.png
+  canvas_creature:
+    name: Canvas Creature
+    description: A four-limbed being whose entire body appears to be living canvas, with colors swirling across its surface
+      in constant artistic motion.
+    tier: standard
+    spawns:
+      - room: the_crimson_crafting_hall
+    level: 5
+    image: d92ee0ea4fafa31f2dcefbce5443fade267cc1415f177db266534242c9671355.png
+  brushstroke_phantom:
+    name: Brushstroke Phantom
+    description: A wispy, almost translucent being that moves like a wet brush stroke, leaving trails of color in its wake.
+    tier: weak
+    spawns:
+      - room: the_lavender_laboratory
+    level: 5
+    image: edccf0186438cba5fbecca81576bfc67677db46a5b47a9eb0270b7017198cfc8.png
+  the_chromatic_lord:
+    name: The Chromatic Lord
+    description: The supreme ruler of Crayonsville, rendered in all colors simultaneously in perfect harmony, their presence
+      commanding respect and awe.
+    tier: boss
+    spawns:
+      - room: the_golden_gallery
+    level: 5
+    image: 5e8d9f40daf8f5d7ef94488c7d91b845ee1b789c2569a43c3866f1be85e19b02.png
+  oil_slick_sprite:
+    name: Oil Slick Sprite
+    description: A small, iridescent creature that seems to exist between states of liquid and solid, reflecting light in
+      impossible ways.
+    tier: weak
+    spawns:
+      - room: the_azure_fountain_district
+    level: 5
+    image: e0f2cb637969a979c54bc451b1877a9dc4c5ba5686dd56a050b0a138dae09112.png
+  hue_harvester:
+    name: Hue Harvester
+    description: A industrious figure painted in earthy browns and greens, dedicated to gathering and processing pigments
+      from Crayonsville's depths.
+    tier: standard
+    spawns:
+      - room: the_orange_orchard
+    level: 5
+    image: 105174a1f48dab2ec31b16c743f1efd3c64d281fe2177727bc99415c54acc64f.png
+  ink_echo:
+    name: Ink Echo
+    description: A spectral being composed of flowing ink and dark purples, leaving written words in the air as it drifts
+      through the archives.
+    tier: standard
+    spawns:
+      - room: the_indigo_inkwell_archives
+    level: 5
+    image: a5319606b0a2b19df92283293e743194d7dbdcd9c53372c2c8132733d41f35b1.png
+  shade_sculptor:
+    name: Shade Sculptor
+    description: An artisan entity rendered in deep magentas and teals, skilled in shaping shadow and light into artistic forms.
+    tier: elite
+    spawns:
+      - room: the_sienna_studio_district
+    level: 5
+    image: d7f349c540bb633ad0658da1d06eba7a1d28e2eefcdccdfcd1ba116ab4bc0a44.png
+  pastel_pixie:
+    name: Pastel Pixie
+    description: A tiny winged creature painted in soft, dreamy pastels of lavender and rose, fluttering about with carefree grace.
+    tier: weak
+    spawns:
+      - room: the_mauve_meditation_chambers
+    level: 5
+    image: 1a44bd71d0474957f612c41398900e8ff7bded93bed82b30b8fe0741bb85df9c.png
+  masterwork_golem:
+    name: Masterwork Golem
+    description: A towering construct painted in every color of the spectrum in perfect artistic balance, serving as
+      protector of the town's greatest treasures.
+    tier: elite
+    spawns:
+      - room: the_aquamarine_amphitheater
+    level: 5
+    image: 45647eb80434744ed731067c1f1275917fb9b86ff4feb5c21723227776086a95.png
+items:
+  crayon_wand:
+    displayName: Crayon Wand
+    description: A wand carved from the core of a giant crayon, still vibrant with red and gold pigment, thrumming with
+      chromatic power.
+    slot: weapon
+    damage: 3
+    level: 5
+    tier: common
+    archetype: damage
+    image: cdcd58010ceebcee6d3d85ef8de0ca261e283450bcaebf0d9359f56ffa0bd843.png
+    keyword: crayon_wand
+  painter_helm:
+    displayName: Painter's Helm
+    description: A helmet crafted to resemble a paint palette, still wet with colors that never dry, offering both
+      protection and inspiration.
+    slot: head
+    armor: 3
+    level: 5
+    tier: common
+    archetype: armor
+    image: 6e092ce9135238f6a78c61d88cc5403b8c03557542ca81629b64759cfb0b8961.png
+    keyword: painter_helm
+  pigment_coat:
+    displayName: Pigment Coat
+    description: A coat woven from solidified paint strokes, iridescent and shimmering, offering protection that seems to
+      shift color with the light.
+    slot: body
+    armor: 6
+    level: 5
+    tier: common
+    archetype: armor
+    image: 9db9fe363a2241801fd0f97e30648c82058a6e43e7d1af4efda338642675cd36.png
+    keyword: pigment_coat
+  brush_gloves:
+    displayName: Brush Gloves
+    description: Delicate gloves rendered from compressed bristles of master brushes, granting precision and finesse to any action.
+    slot: hands
+    armor: 3
+    level: 5
+    tier: common
+    archetype: armor
+    image: 9e970f7d369dfc58679009c1ab149c94564ba6ae429643ba2172ddab9262e3eb.png
+    keyword: brush_gloves
+  vial_of_chromatic_essence:
+    displayName: Vial of Chromatic Essence
+    description: A small glass bottle containing swirling colors that seem alive and aware, essence of Crayonsville itself.
+    room: the_golden_gallery
+    image: 0170725927444d2b5dd202a5fb05d6c4afd5f2b805df76f7a6a8ffefb75656a2.png
+    keyword: vial_of_chromatic_essence
+  scroll_of_color_theory:
+    displayName: Scroll of Color Theory
+    description: An ancient parchment documenting the fundamental laws of color harmony in Auringold, written in inks that
+      glow softly.
+    room: the_indigo_inkwell_archives
+    image: 38cd19697528b281ac4fcabd1e5408fc358b7d2c2871426d4896c56227bb9611.png
+    keyword: scroll_of_color_theory
+  blessed_pigment_dust:
+    displayName: Blessed Pigment Dust
+    description: Finely ground powdered colors blessed by the Chromatic Lord, useful for crafting and imbuing items with
+      chromatic power.
+    room: the_violet_vendor_s_row
+    image: ee38c4a401d9807f5c75f80690871ba7bc0cb36ae990baf368515028b51050b1.png
+    keyword: blessed_pigment_dust
+  ancient_art_key:
+    displayName: Ancient Art Key
+    description: A key carved from solidified rainbow light, capable of unlocking the deepest secrets of Crayonsville's
+      hidden galleries.
+    room: the_amber_archive_of_dreams
+    image: 596784751a11487c73903a68ff4fef202c8cdf94d0cd665f7c118d7f94deddac.png
+    keyword: ancient_art_key
+  dream_journal:
+    displayName: Dream Journal
+    description: A leather-bound book filled with blank pages made of pressed dream-petals, awaiting the thoughts and
+      sketches of inspired artists.
+    room: the_lavender_laboratory
+    image: 794e7b28009253ad3f6470ef9cd73dfb8d95dc91632b6bb1af8c4b3e448f01d8.png
+    keyword: dream_journal
+  spectral_compass:
+    displayName: Spectral Compass
+    description: A compass whose needle points not north, but toward the nearest source of genuine artistic inspiration
+      within Crayonsville.
+    room: the_celadon_cartographer_s_lodge
+    image: bfc336df2079769c2d6e6785c809cb05cc02778210669903ed06bbadedfd1bdd.png
+    keyword: spectral_compass
