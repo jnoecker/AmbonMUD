@@ -25,7 +25,7 @@ val micrometerVersion = "1.17.0"
 val grpcVersion = "1.83.0"
 val grpcKotlinVersion = "1.5.0"
 val protobufVersion = "4.35.1"
-val exposedVersion = "1.3.1"
+val exposedVersion = "1.4.0"
 
 dependencies {
     // Coroutines
