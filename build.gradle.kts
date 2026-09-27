@@ -71,7 +71,7 @@ dependencies {
     testImplementation("io.grpc:grpc-testing:$grpcVersion")
     testImplementation("io.grpc:grpc-inprocess:$grpcVersion")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.11.0")
-    testImplementation("org.junit.jupiter:junit-jupiter:6.1.1")
+    testImplementation("org.junit.jupiter:junit-jupiter:6.1.3")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation("io.ktor:ktor-server-test-host-jvm:$ktorVersion")
     testImplementation("io.ktor:ktor-client-cio-jvm:$ktorVersion")
