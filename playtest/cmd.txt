@@ -1,0 +1,8 @@
+Playtester7
+PlaytestPass123!
+score
+gold
+equipment
+bank
+lottery info
+quit

@@ -1,0 +1,464 @@
+zone: underbed_hollow
+startRoom: the_starlight_bridge
+rooms:
+  the_starlight_bridge:
+    title: The Starlight Bridge
+    description: A swaying bridge of moss-slick planks stretches across a shallow ravine, framed by ropes woven from
+      starlight and spider silk. A hand-painted sign warns of dust bunnies in season, its letters wavering as though
+      painted in half-sleep.
+    exits:
+      e: bridge_s_end
+      w: the_downward_grove
+      s: hollow_of_lost_memories
+      n: the_patience_grove
+    image: 350fa75e684972c3071593b94aea578e5bd0bbd82174c6c3e8597d709d6f16e7.jpg
+  bridge_s_end:
+    title: Bridge's End
+    description: The planks creak beneath your feet as the ravine falls away behind you, and ahead the forest of the
+      Underbed Hollow materializes from shadow and twilight. The air tastes of dust and ancient nostalgia.
+    exits:
+      w: the_starlight_bridge
+      s: the_dust_bunny_warren
+      e: pixel_haven:road_underbed_hollow
+    image: c766321e313754b4a7598f3c5a952e04d0aa3bc7f3443288650f3648efbea45f.jpg
+  the_downward_grove:
+    title: The Downward Grove
+    description: Massive trees spiral downward into clouds of soft shadow, their roots reaching toward invisible soil above.
+      Luminescent fungi cast a gentle glow across the forest floor, painting the world in shades of dreaming.
+    exits:
+      e: the_starlight_bridge
+      s: forgotten_laughter_clearing
+      w: the_spiraling_roots
+    image: bfe4b87dca11475edb08ee06cf82f9068f17e2dfc7e89ab5bdb674598baab730.jpg
+  forgotten_laughter_clearing:
+    title: Forgotten Laughter Clearing
+    description: A small clearing where the air itself seems to shimmer with the echo of abandoned joy. Wisps of what might
+      be laughter drift between the inverted trees, and the ground is soft with decades of accumulated dreams.
+    exits:
+      n: the_downward_grove
+      w: nest_of_abandoned_dreams
+      e: hollow_of_lost_memories
+    image: dd04195d8890edda044772f20c7554677c63ab2f6b18a13472ecb5063e738dc9.jpg
+  hollow_of_lost_memories:
+    title: Hollow of Lost Memories
+    description: Tree trunks twisted into impossible shapes cradle pockets of air thick with memory-scent. Lost moments nest
+      here like birds returning home, and the shadows seem to hold faces you almost recognize.
+    exits:
+      n: the_starlight_bridge
+      e: the_dust_bunny_warren
+      w: forgotten_laughter_clearing
+    image: e3159dfc7b1de6262b7e09e6ba4063aa5736c8d9b79e2371add5b0147bf7fa45.jpg
+  the_dust_bunny_warren:
+    title: The Dust Bunny Warren
+    description: A dense cluster of burrows and tunnels wind through the underbrush, marked by tiny paw prints and the faint
+      sound of squeaking. Tufts of luminous fur catch in the fungal light, betraying the residents' presence.
+    exits:
+      w: hollow_of_lost_memories
+      e: twilight_glade
+      n: bridge_s_end
+    image: eb6fe725a9c9f0fe264d110344dfd60178b2d70041ad76975bf46a3f91d59aa1.jpg
+  twilight_glade:
+    title: Twilight Glade
+    description: Perpetual dusk settles here like a blanket, with roots and branches creating a labyrinth of natural
+      corridors. The air pulses gently, as though the forest itself is breathing in its sleep.
+    exits:
+      w: the_dust_bunny_warren
+    image: 66cc3343ab8335b0ddb0d4c1806f04ede4438f9a60e4c34eae6d59da1adcd155.jpg
+  nest_of_abandoned_dreams:
+    title: Nest of Abandoned Dreams
+    description: Soft clouds of shadow collect here in pools, and shimmering threads of forgotten aspirations hang between
+      the trees like spider's silk catching starlight. The ground feels somehow softer, more forgiving.
+    exits:
+      e: forgotten_laughter_clearing
+      w: deep_fungal_grove
+      s: the_whispering_hollow
+    image: 539a60fb4e86c155832963bf7ce9c77465fd31f67a970924d757a829768f9bcc.jpg
+  the_spiraling_roots:
+    title: The Spiraling Roots
+    description: Massive root systems twist through the air in impossible spirals, creating natural bridges and hiding
+      places. The wood is warm to the touch and seems to hum with the memory of growth.
+    exits:
+      e: the_downward_grove
+      n: shadow_pool
+    image: 7ef9cce2be4be64d461163e5f2ac316788cff96b4ac80bf041a6239ddaa64474.jpg
+  deep_fungal_grove:
+    title: Deep Fungal Grove
+    description: Luminescent fungi bloom in profusion here, painting the forest in soft blues and greens. The air is thick
+      with spore-dust and the sweet scent of decay-turned-nourishment, the cycle of dreams made tangible.
+    exits:
+      e: nest_of_abandoned_dreams
+      s: moss_draped_passage
+    image: c2f56e2c4215524d35bcaf1dbb4b6f2c5dfca6c836e96fd564f30262cde8c234.jpg
+  the_whispering_hollow:
+    title: The Whispering Hollow
+    description: Voices too soft to understand drift through the inverted canopy, speaking in the language of lost things.
+      The trees seem to lean inward here, cradling secrets in their twisted bark.
+    exits:
+      n: nest_of_abandoned_dreams
+      s: bridge_of_whispers
+    image: 1376770d106636cde34305fc782c3c0d6fe053bda315cae05e1e093e2302b5df.jpg
+  moss_draped_passage:
+    title: Moss-Draped Passage
+    description: The path narrows between towering roots covered in thick, luminescent moss that glows faintly in the
+      perpetual twilight. Each step releases the scent of old memory and undisturbed earth.
+    exits:
+      n: deep_fungal_grove
+      s: the_lost_things_market
+    image: 748a8c7218cbbd9bf9a5d766b27ac8d5c58080f2dfc834ce912610f69b06f56b.jpg
+  the_lost_things_market:
+    title: The Lost Things Market
+    description: A natural clearing where forgotten objects seem to collect—toys with no owners, keys to doors that no
+      longer exist, trinkets from dreams half-remembered. Everything glimmers slightly, as though waiting to be
+      reclaimed.
+    exits:
+      n: moss_draped_passage
+      s: starlight_cavern
+      e: bridge_of_whispers
+    image: c3058bbf6732c72fd9ef26b92513ee99d748e47ef1f228ac44a10e51623c15a4.jpg
+  shadow_pool:
+    title: Shadow Pool
+    description: A still pool of liquid shadow reflects light that doesn't seem to come from anywhere in particular. The
+      water's surface ripples without cause, disturbed by things moving beneath in the dreams below.
+    exits:
+      s: the_spiraling_roots
+      w: the_tangled_thicket
+      e: canopy_of_sighs
+    image: 6230cd7753ab6f9215e1cf475827edcca41d784a2c38781bcad32bc657006732.jpg
+  the_tangled_thicket:
+    title: The Tangled Thicket
+    description: A dense weaving of roots and branches creates a maze-like passage where it's easy to lose direction. The
+      air here feels older, pressed down by centuries of forgotten moments.
+    exits:
+      e: shadow_pool
+      w: the_dreamer_s_rest
+      s: the_forgotten_nest
+    image: 042abf5209dfb22e918e14fb3c1c86038edc4896a24273c333b7a3a8b41ceb23.jpg
+  starlight_cavern:
+    title: Starlight Cavern
+    description: The forest opens into a natural cavity where the rope-like starlight from the bridge seems to pool and
+      gather, casting the space in an ethereal glow. Shadows dance here without bodies to cast them.
+    exits:
+      n: the_lost_things_market
+      w: the_collector_s_den
+    image: 2b88eed351a6f5835b65967bbc137318d1569d6e9a02ee46722c9318f2271f13.jpg
+  the_dreamer_s_rest:
+    title: The Dreamer's Rest
+    description: A peaceful hollow where the air is warm and the soft glow of fungi creates an almost inviting atmosphere.
+      This place whispers of sleep and safety, though whether it brings either is uncertain.
+    exits:
+      e: the_tangled_thicket
+      s: the_twilight_heart
+    image: 693cd2acd57d08d3540d08def521be126e59c7da511263351626d41969a70340.jpg
+  canopy_of_sighs:
+    title: Canopy of Sighs
+    description: Where the inverted branches are thickest, a susurrus of breath seems to move through the leaves. The sound
+      is neither disturbing nor comforting, simply the forest breathing out generations of dreams.
+    exits:
+      w: shadow_pool
+      e: the_patience_grove
+    image: f3e4352328e1b9d4fb9bdc8a8d76c73d7bef9d7259e9b530208d84e895a71bac.jpg
+  the_collector_s_den:
+    title: The Collector's Den
+    description: A burrow enlarged by something with more intention than the average forest creature, lined with carefully
+      arranged found objects. The walls are smooth and warm, and the air carries the musk of a territorial presence.
+    exits:
+      e: starlight_cavern
+      w: luminous_ravine
+    image: efae8faf71d3ea53859f988aa55d2a23f86fd5d7faa0f4e4970ddd22bd6b1e50.jpg
+  luminous_ravine:
+    title: Luminous Ravine
+    description: The forest floor drops away here, and below stretches a ravine where thousands of fungi bloom in cascading
+      waves of gentle light. The depth seems to shift when you're not looking directly at it.
+    exits:
+      e: the_collector_s_den
+    image: 30c0f4fbbce11a9b714d65c3eb4f126357e83a1e25158d2d2c479a6310298175.jpg
+  the_patience_grove:
+    title: The Patience Grove
+    description: Ancient trees stand here with roots that have grown so deep they seem to have become the earth itself. The
+      stillness is profound, suggesting a kind of waiting that has lasted longer than memory.
+    exits:
+      w: canopy_of_sighs
+      s: the_starlight_bridge
+    image: 2b4ea642065bd98268fb9aa7777ec3cca4dfd3aff65170102c2e463b92edd1fb.jpg
+  bridge_of_whispers:
+    title: Bridge of Whispers
+    description: A natural bridge of root and branch spans a shadow-chasm, and as you cross it, words seem to brush past
+      you—fragments of old conversations and half-remembered confessions.
+    exits:
+      w: the_lost_things_market
+      e: fungal_cathedral
+      n: the_whispering_hollow
+      s: krioshaion:whispering_mist_plains
+    image: 8ca7a73b0e9d75afa5e21247260fce5b26c50006925b3fee785f85fe6ff0cc8d.jpg
+  the_twilight_heart:
+    title: The Twilight Heart
+    description: The very center of the hollow, where the perpetual dusk seems deepest and most sacred. Here the breathing
+      of the forest is loudest, and one feels both utterly alone and entirely observed.
+    exits:
+      n: the_dreamer_s_rest
+      e: the_forgotten_nest
+    image: be61d95b17e8cfbe9af025fb8844ef1bc3c2e71f4c318d004cfeea12da7ca35b.jpg
+  fungal_cathedral:
+    title: Fungal Cathedral
+    description: Massive fungi have grown into towering structures, creating natural columns and archways. Their
+      luminescence casts everything in an otherworldly glow, suggesting both grandeur and decay.
+    exits:
+      w: bridge_of_whispers
+      s: roots_of_remembrance
+    image: 10a8119378f0542ab05eb520f336f2c828d9a80e6227c1e305b3c87c22511f31.jpg
+  the_forgotten_nest:
+    title: The Forgotten Nest
+    description: A tangle of twigs and shadowy material forms a massive nest, lined with soft things that shouldn't still be
+      soft. Small, shapeless lumps suggest inhabitants that prefer darkness.
+    exits:
+      w: the_twilight_heart
+      n: the_tangled_thicket
+    image: be7fb6b1adcb15fce522b3441a74734e101d0e7b7fc7029277938529a2e5148d.jpg
+  roots_of_remembrance:
+    title: Roots of Remembrance
+    description: A knot of enormous roots creates a natural chamber where the walls seem lined with memories—impressions of
+      faces, places, and moments long abandoned. Touching the wood leaves traces on your skin.
+    exits:
+      n: fungal_cathedral
+      e: the_dust_bunny_king_s_throne
+    image: 7059baac225716287c4961b6126388404a13fd22af96498ecd0b88632227b0db.jpg
+  the_dust_bunny_king_s_throne:
+    title: The Dust Bunny King's Throne
+    description: A natural hollow in the largest tree trunk has been claimed by something that collects shiny things.
+      Buttons, coins, and fragments of jewelry glitter in the shadows, arranged with peculiar care.
+    exits:
+      w: roots_of_remembrance
+      e: the_threshold
+    image: 5b4fc7781274e8cb471d947dbb4a0432be890b8058d9a544b3a4b4312479eedb.jpg
+  the_threshold:
+    title: The Threshold
+    description: A feeling of boundary pervades this place, though no physical barrier is visible. The air tastes different
+      here, as though the boundary between dreams and waking brushes very close.
+    exits:
+      w: the_dust_bunny_king_s_throne
+      n: the_mirror_glade
+      s: the_returning_path
+    image: 9fded5758916e4198385956d7366fd24ece86e61b1dfdfc38e13ad3789e6ed96.jpg
+  the_mirror_glade:
+    title: The Mirror Glade
+    description: A clearing where the ground has become so reflective it's indistinguishable from still water. You see
+      yourself walking below yourself, and the distinction between up and down becomes uncertain.
+    exits:
+      s: the_threshold
+    image: 394215ecc4937ce2a31eaead0fb40cd3e30ba7e9d97d268a3caf89afe2829e5f.jpg
+  the_returning_path:
+    title: The Returning Path
+    description: As the forest thins, a path becomes visible leading back toward the bridge and the waking world. The air
+      grows fresher, though the call of the hollow lingers like a half-forgotten dream.
+    exits:
+      n: the_threshold
+    image: ee0e13818da6f6d7d247aa14faf758be2cfae7e74beed13f4b60b812cf5dccfb.jpg
+lifespan: 30
+levelBand:
+  min: 5
+  max: 5
+difficultyHint: standard
+image:
+  room: 68d1564fe2828c9234bae3f1db2d7b164c56ccc2e34c9ff7d6c595ed25186a7d.jpg
+  mob: d208fe87d1c7e1509013a9d90ced46c8cacd0ee3e9c63676a722ecf30ee5f9f9.png
+  item: a04ba2b260e4a0caa0cee215133b758a599e89c7f97817067f7d135168861e50.png
+mobs:
+  dust_bunny_scout:
+    name: Dust Bunny Scout
+    description: A small, furry creature with too many tails that twist and curl independently. Its eyes gleam with
+      mischievous intelligence as it snuffles through the underbrush, searching for lost treasures.
+    tier: weak
+    spawns:
+      - room: the_dust_bunny_warren
+    level: 5
+    image: 7e2a1566b97d424814cfef404dfc5e54204eaf096da464157275865695e1364d.png
+  dust_bunny_colony:
+    name: Dust Bunny Colony Mother
+    description: Larger than her kin, this dust bunny bristles with protective instinct, her numerous tails fanned out like
+      a crown. She guards the warren with fierce determination, her fur shimmering with an almost luminescent sheen.
+    tier: standard
+    spawns:
+      - room: the_dust_bunny_warren
+    level: 5
+    image: f6ebf4a8ed72139efaedafd87ff41e60fb1fc1db5d98b9151e251b88be667b5a.png
+  shadow_sprite:
+    name: Shadow Sprite
+    description: A creature of living twilight that flickers and dances at the edge of perception. It seems to be made
+      partially of shadow and partially of forgotten dreams, never quite solid.
+    tier: weak
+    spawns:
+      - room: shadow_pool
+    level: 5
+    image: c878a7e7a1bd0963d372e4fa5ecba486f49caf3e83fdad853f11f2baeda868c1.png
+  root_lurker:
+    name: Root Lurker
+    description: An amorphous mass that moves through the twisted root systems with unsettling grace. Its form seems to
+      shift between plant and animal, as though undecided about what it should be.
+    tier: standard
+    spawns:
+      - room: the_tangled_thicket
+    level: 5
+    image: 4360b262cf8bcf63525c4a5e5c0ed73ea4558a20474e041e21bf5e29245f4535.png
+  memory_mote:
+    name: Memory Mote
+    description: A small floating orb of soft light that hums with the weight of forgotten moments. Approaching it fills
+      your mind with fragments of lives you never lived.
+    tier: weak
+    spawns:
+      - room: hollow_of_lost_memories
+    level: 5
+    image: c26fe4001ac1bb2f4424d0594e1703ebdd938297149fcbef268025e9b8ae168c.png
+  fungal_keeper:
+    name: Fungal Keeper
+    description: A towering, vaguely humanoid shape covered in luminescent fungal blooms. It moves with ancient slowness,
+      tending to the glowing caps around it like a patient gardener.
+    tier: standard
+    spawns:
+      - room: fungal_cathedral
+    level: 5
+    image: 88a44bc56b204ebd6d6f3e44bf8e0287cd3d1a4f47a882f7c462bd08487d584a.png
+  dust_bunny_king:
+    name: Dust Bunny King
+    description: A massive dust bunny crowned with glittering trinkets, its fur matted with collected shiny objects and lost
+      treasures. Its presence commands respect from all lesser creatures of the hollow.
+    tier: elite
+    spawns:
+      - room: the_dust_bunny_king_s_throne
+    level: 5
+    image: a043adb4cd615464d8bd2d4c24c45aef91089a140f71d8d29aaf79847e481f6c.png
+  shadow_weaver:
+    name: Shadow Weaver
+    description: A creature of pure shadow that spins threads of darkness between the trees. Its form is never quite
+      visible, but you can feel the weight of its attention like a spider in your mind.
+    tier: elite
+    spawns:
+      - room: bridge_of_whispers
+    level: 5
+    image: c921da3e94be532c49a7a8bdc5180f7cee880ce5020120fbc41802abfac408bc.png
+  forgotten_guardian:
+    name: Forgotten Guardian
+    description: A massive, ancient creature that might have been a beast or might have been something else entirely. Its
+      form is wrapped in layers of shadow and memory, and it guards the heart of the hollow with implacable patience.
+    tier: boss
+    spawns:
+      - room: the_twilight_heart
+    level: 5
+    image: 8d6ec0ce17df6bf4b61ae79760d917eafa8061ffba16aee8b7b1bbe0951e5eca.png
+  dream_drifter:
+    name: Dream Drifter
+    description: A ghostly, almost transparent creature that moves with the logic of dreams rather than physics. It leaves
+      trails of faintly glowing dust wherever it goes.
+    tier: weak
+    spawns:
+      - room: nest_of_abandoned_dreams
+    level: 5
+    image: afd8f3022cf1354d3decf923e0298e0aaaf98800139f8d8c503ff3c3cc394653.png
+  root_whisperer:
+    name: Root Whisperer
+    description: A slender figure that seems to be half-plant, half-something else, its voice like wind through branches. It
+      speaks in riddles and half-truths, dwelling where roots and shadows tangle deepest.
+    tier: standard
+    spawns:
+      - room: roots_of_remembrance
+    level: 5
+    image: 7da11cda0aac7442094497442150f7843970e63e71a4df1cb443fca38138c7ea.png
+  glimmer_thief:
+    name: Glimmer Thief
+    description: A quick, darting creature with gem-bright eyes that steals light itself. Its fur seems to absorb and
+      reflect the fungal glow in hypnotic patterns.
+    tier: weak
+    spawns:
+      - room: the_lost_things_market
+    level: 5
+    image: 79c179c648fc6455b6601f6c822d317c3babbb1960642c1e75007bfa59dcd742.png
+items:
+  starlight_rope:
+    displayName: Starlight Rope
+    description: A length of rope woven from starlight and spider silk, still humming with the faint energy of the boundary
+      it once marked. It feels warm and alive in your hands.
+    slot: weapon
+    damage: 3
+    room: bridge_s_end
+    level: 5
+    tier: common
+    archetype: damage
+    image: b7066ec15d96578b13635cda4df71b6c75204b358b66d57ec7b0afe2175c5f93.png
+    keyword: starlight_rope
+  forgotten_crown:
+    displayName: Crown of Lost Dreams
+    description: A delicate circlet of twisted roots and luminescent fungi, embedded with small forgotten treasures. Wearing
+      it, you feel the weight of abandoned aspirations.
+    slot: head
+    armor: 3
+    room: the_dust_bunny_king_s_throne
+    level: 5
+    tier: common
+    archetype: armor
+    image: 56f47f9647580c2602ddc44748804407b4d045057bbedc07ac97038f7d71a99a.png
+    keyword: forgotten_crown
+  moss_cloak:
+    displayName: Moss-Woven Cloak
+    description: A garment woven from luminescent moss that clings to you like a living thing. It smells of old earth and
+      whispers protection in a language older than words.
+    slot: body
+    armor: 6
+    room: moss_draped_passage
+    level: 5
+    tier: common
+    archetype: armor
+    image: c4bc4459ac54107d220552227bc5ac8d1e1e2cb0860e35a38a3409c38f44c059.png
+    keyword: moss_cloak
+  shadow_gloves:
+    displayName: Gloves of Shadow Touch
+    description: Thin, dark gloves that seem to absorb light rather than reflect it. They grant dexterity when handling
+      forgotten things.
+    slot: hands
+    room: bridge_of_whispers
+    level: 5
+    tier: common
+    archetype: armor
+    armor: 3
+    image: 80df69231de6fb993edf3a72602b0474240a58573b753ba7472154ba32a9c2aa.png
+    keyword: shadow_gloves
+  memory_dust:
+    displayName: Vial of Memory Dust
+    description: A small vial filled with shimmering dust that smells of nostalgia and old dreams. When opened, it fills the
+      air with the scent of things long forgotten.
+    room: hollow_of_lost_memories
+    image: 1abc3e8325bad08febc969cb1958c17712524db7633d51f6d25d690d491317d2.png
+    keyword: memory_dust
+  lost_locket:
+    displayName: Tarnished Locket
+    description: A small golden locket containing a portrait of a face you don't recognize but somehow feel you should. It's
+      warm to the touch and pulses with quiet sadness.
+    room: the_lost_things_market
+    image: 03074e7324e50950ce3e66d32cbf8105e615ffb25701cbba450799f1ae33c92f.png
+    keyword: lost_locket
+  dream_key:
+    displayName: Key to a Forgotten Door
+    description: An ornate key made of what appears to be crystallized moonlight. It's light as air and glimmers with the
+      promise of opening something important, if you could only remember what.
+    room: starlight_cavern
+    image: 247a19f9b41ede4ad1154e26eba166b3570bc212c143363b8c4c313418577f0d.png
+    keyword: dream_key
+  fungal_cap:
+    displayName: Luminescent Fungal Cap
+    description: A single large fungal cap that glows softly with bioluminescent light. Holding it fills you with a sense of
+      calm and ancient patience.
+    room: fungal_cathedral
+    image: 8247b6f4a3c33b722256d78f5bcc7224b82840826a289168bcef68ce9369cd3e.png
+    keyword: fungal_cap
+  spun_starlight_thread:
+    displayName: Spool of Starlight Thread
+    description: A spool wound with thread that seems to be made from the same material as the bridge's ropes. It hums
+      softly and leaves trails of pale light when drawn across a surface.
+    room: the_starlight_bridge
+    image: 2f114f166aa6e76b16d128e3bce6f6a2f839e16d6bb12f9efa7c9e928cf1d98b.png
+    keyword: spun_starlight_thread
+  hollow_token:
+    displayName: Token of the Underbed Hollow
+    description: A smooth stone disk carved with symbols that hurt to look at directly. It seems to serve as a proof of
+      passage, recognized by the forest's older inhabitants.
+    room: the_twilight_heart
+    image: 45e49486564913dbfa8ec57816cb4bbb7d06f126b42ab3cd76492f90237572b6.png
+    keyword: hollow_token

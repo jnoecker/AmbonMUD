@@ -1,0 +1,440 @@
+zone: braelynn
+startRoom: throne_hall
+rooms:
+  throne_hall:
+    title: Grand Throne Hall of Queen Braelynn
+    description: A sprawling hall of soft velvet and shimmering silk, with a throne carved from crystallized cotton candy at
+      its center. Stuffed animals of every shape and size line the walls as silent courtiers, and the air smells sweetly
+      of vanilla and dreams.
+    exits:
+      n: guards_barracks
+      w: penguin_gallery
+      s: kitchen_of_wonders
+      e: dress_up_chamber
+    image: 7e58518ed55d16ed54f1286fdc150e21ceaec079752c3e444623c384b9d2de7f.jpg
+  guards_barracks:
+    title: Penguin Guard Barracks
+    description: A cozy fortress lined with snowy white and midnight blue cushions, where adorable penguin soldiers waddle
+      about in formation. Their tiny uniforms sparkle with buttons that glow like starlight.
+    exits:
+      s: throne_hall
+      e: armory_vault
+      w: training_ground
+      n: frozen_lake
+    image: 1ad67852e3c252925aeae990f986bb58d9075280f754ccb951de510343f6ee91.jpg
+  training_ground:
+    title: Penguin Training Grounds
+    description: An icy field of soft foam and fluffy white carpeting where penguin guards practice their marching and
+      posing. Cute painted wooden targets stand at intervals, slightly dented from enthusiastic waddle-kicks.
+    exits:
+      e: guards_barracks
+      n: ice_cavern
+    image: 89fc8f935291bf7f6a61d9cbab40f425ab51b11995d225befebc68c0b44cb4bc.jpg
+  ice_cavern:
+    title: Crystalline Ice Cavern
+    description: A glittering cave of pale blue and silver, where icicles hang like chandeliers and the walls shimmer with
+      an ethereal glow. Everything here is soft and safe, despite looking like it's made of frozen starlight.
+    exits:
+      s: training_ground
+      e: frozen_lake
+    image: 5368d84e4d8e06bbc1e029535b17ef4ee130144bfb7ffa154864d4d4856716ba.jpg
+  frozen_lake:
+    title: Frozen Dream Lake
+    description: A vast expanse of smooth, clear ice reflecting a sky full of candy-colored clouds and floating
+      dream-bubbles. Penguin families slide and play on the surface without fear.
+    exits:
+      w: ice_cavern
+      s: guards_barracks
+      e: mirror_grotto
+    image: 90841773e8115de309e0742218ee8be68005d9565ca3cc06e09f53748726a3f1.jpg
+  mirror_grotto:
+    title: Hall of Mirrors and Reflections
+    description: Walls of polished crystal and enchanted glass create a dizzying maze of reflections, each one showing a
+      slightly different, more magical version of yourself. The ground is cushioned with clouds.
+    exits:
+      w: frozen_lake
+      s: armory_vault
+    image: 454bde0c55c9b7dfc35fb1efb55743ff8243cd4893d932bc008caa436131fa07.jpg
+  armory_vault:
+    title: Royal Armory Vault
+    description: A secure chamber filled with tiny weapons and armor for penguin guards—little swords, helmets, and shields,
+      all kept in a warm glow of protective magic. Everything sparkles with a child's sense of importance.
+    exits:
+      w: guards_barracks
+      n: mirror_grotto
+      e: treasure_room
+    image: 9def7f22f30e93682215149bdce00f7d527fe1d9c3cbfe09aa28a22b23009bf2.jpg
+  treasure_room:
+    title: Chamber of Dreams and Treasures
+    description: Piles of soft, plush treasures fill shelves and cushioned alcoves—buttons that sing when touched, ribbons
+      that dance in invisible winds, and trinkets that shimmer with pure joy.
+    exits:
+      w: armory_vault
+    image: 2bf93c0151af946705e830deec710e00b3c78a16a17f71a8070191a7c53530af.jpg
+  dress_up_chamber:
+    title: Grand Dress-Up Room
+    description: An explosion of color and fabric—racks of costumes, cloaks, crowns, and tiaras hang from every surface, and
+      mirrors reflect a thousand versions of royal pretend-play. The air itself feels theatrical.
+    exits:
+      s: costume_closet
+      e: makeup_salon
+      w: throne_hall
+    image: 1fddb7e565ae1f4fb9e5f77ff444347db280f8c4340500a5cb0f16ca26747f27.jpg
+  costume_closet:
+    title: Costume Archive
+    description: "A narrower chamber lined floor-to-ceiling with labeled shelves of outfits: pirate garb, wizard robes,
+      doctor's kits, knight's armor, and regal gowns that shimmer with imagined grandeur."
+    exits:
+      n: dress_up_chamber
+    image: 4b4c6fd56422dd7e4d41ee3a540f585338076ed2c7ae91207cf533f9ed7fe405.jpg
+  makeup_salon:
+    title: Enchanted Beauty Salon
+    description: A room filled with makeup mirrors, jewelry boxes, and magical potions in colorful bottles. Everything is
+      oversized for easy pretend-play, and the mirrors glow with flattering, dreamy light.
+    exits:
+      w: dress_up_chamber
+    image: 6c01c858cbb4611ace8d3e0ef70d07a51455ea755763eb51d1b5186dc2a728fd.jpg
+  tea_parlor:
+    title: Magical Tea House
+    description: An elegant parlor where enchanted tea sets float and pour themselves for an audience of stuffed animals
+      seated at tiny tables. The tea is always warm, always the right flavor, and the cups never empty.
+    exits:
+      e: kitchen_of_wonders
+      w: tea_garden
+    image: 3cf5df7192e85434dfdb5a0a82625ff299dfdfac07b2de12d175fdf87b1eb9fd.jpg
+  stuffed_animal_lounge:
+    title: Stuffed Animal Receiving Room
+    description: A cozy parlor where plush creatures of all kinds lounge on pillows and cushions, some sipping tea from tiny
+      cups, others engaged in hushed conversation that only children can understand. The walls are lined with shelves of
+      even more stuffies.
+    exits:
+      e: penguin_gallery
+      w: pbrae:upper_landing
+    image: 904872cbf642f4d56a4aa06204059e8fe3857c1ae5ef1f05d8c68563648f057e.jpg
+  penguin_gallery:
+    title: Penguin Portrait Gallery
+    description: A hallway of fame where portraits of famous penguin heroes hang in gilded frames—each one more adorable
+      than the last, with names like Sir Waddles and Lady Fluff written in elegant script beneath.
+    exits:
+      w: stuffed_animal_lounge
+      e: throne_hall
+    image: 0d87c4cba31de0907323095913df3850e797187a7ceb2d8912d66f15a49e454c.jpg
+  garden_maze:
+    title: Living Garden Maze
+    description: Soft, living hedges of plush green material form a whimsical maze where the paths are lined with flowers
+      that giggle when you brush past them. Northward, glimpses of a quaint tea house peek through gaps in the verdant
+      walls, while to the east, the brilliant crimson blooms of an enchanted rose garden beckon.
+    exits:
+      e: royal_gardens
+      n: dream_path
+      w: peacock_pavilion
+    image: e7181f6fede9090574cd3a343536f421b75c8a0ef9fca7045cc26f575c446200.jpg
+  rose_garden:
+    title: Enchanted Rose Garden
+    description: A garden where roses of impossible colors bloom eternally—midnight blue, sunset orange, cloud white, and
+      dream-silver. Each petal feels soft as velvet and smells of a different sweet memory.
+    exits:
+      e: butterfly_garden
+      n: tea_garden
+    image: e1a3f72b383c1125e5a691f68b2ab7050cc3934f25e108888228ef6a287a5c49.jpg
+  royal_gardens:
+    title: Royal Gardens of Braelynn
+    description: Sprawling grounds of soft moss and gentle flowers, where a massive statue of Queen Braelynn herself stands
+      in a place of honor. Pathways of crushed starlight connect to various wings of the palace.
+    exits:
+      s: chicken_coop
+      w: garden_maze
+    image: e1a7ca18ea61d3ba3af1f6f5344fda36da4e96c07a628671988322e94a228d89.jpg
+  chicken_coop:
+    title: Rainbow Chicken Coop
+    description: A cheerful coop filled with chickens, turkeys, and ducks of every color imaginable—turquoise hens, pink
+      turkeys, rainbow ducks, and tiny blue chicks that chirp in harmony. The air is warm and sweet-smelling.
+    exits:
+      n: royal_gardens
+      s: duck_pond
+    image: 5a0702be26197e0f49ccf115e31e29836c628a0129f62afa13378c4f2c8f50a9.jpg
+  duck_pond:
+    title: Dream Duck Pond
+    description: A shimmering pond where ducks of every pastel color float peacefully, creating ripples that turn into tiny
+      rainbows. Lily pads the size of cushions drift lazily across the water.
+    exits:
+      n: chicken_coop
+    image: 8db300797403d400a9674001405fe39b313a56e1b6dd9600778bcd28b4608654.jpg
+  storybook_restaurant:
+    title: Never-Ending Storybook Restaurant
+    description: A whimsical dining hall where the menu changes with every thought, and rubber duck waiters waddle about
+      carrying plates of impossible foods—cloud soup, chocolate rivers, candy floss clouds, and peanut butter rainbows.
+    exits:
+      w: kitchen_of_wonders
+    image: f32b21884ac2d532e3053f205a4d26a038bb8d3cded8b35a536929beaba65483.jpg
+  kitchen_of_wonders:
+    title: Kitchen of Magical Wonders
+    description: A bustling kitchen staffed by hundreds of tiny rubber ducks from vending machines, each one wearing a
+      little chef's hat. Pots bubble with magical ingredients, and the air shimmers with food-related enchantments.
+    exits:
+      w: tea_parlor
+      e: storybook_restaurant
+      n: throne_hall
+      s: dream_path
+    image: 063195db4a30124bba8f900c72c00507d06c4c1cf3aa8f3180935185484dd3dc.jpg
+  dream_path:
+    title: Winding Dream Path
+    description: A softly glowing path of clouds and starlight that winds through the kingdom, connecting far-flung corners.
+      The path itself seems alive, gently guiding wanderers in the right direction.
+    exits:
+      n: kitchen_of_wonders
+      s: garden_maze
+    image: 235a105e431f05d8fda99b627ec030a97173a0b263d8c88f487580643daf6641.jpg
+  axolotl_grotto:
+    title: Axolotl Enchantment Grotto
+    description: A serene water cavern where axolotls in every color imaginable swim through crystalline water—pink
+      axolotls, white axolotls, rainbow-speckled axolotls all gliding gracefully. The walls glow with soft
+      bioluminescence.
+    exits:
+      s: underwater_palace
+      n: peacock_pavilion
+    image: 865a1d7bb9cbf6c9869b7a4134346111fca6bb492ff048a84f19be33c0d5431b.jpg
+  underwater_palace:
+    title: Underwater Dream Palace
+    description: A shimmering palace built within a giant bubble deep beneath dream-waters, where everything is soft and
+      safe despite the watery surroundings. Axolotls and friendly fish swim past the bubble-windows.
+    exits:
+      n: axolotl_grotto
+    image: 6ab7b21402c7446438d6ed022762be47c87f154e9a08c109191455e6c8a3eb20.jpg
+  peacock_pavilion:
+    title: Peacock Pavilion
+    description: An ornate pavilion where magical peacocks strut about, their tails spreading into fans of impossible colors
+      and patterns. The ground is soft velvet, and the air smells of magic and pride.
+    exits:
+      n: butterfly_garden
+      s: axolotl_grotto
+      e: garden_maze
+    image: 1f604cb9606c7439351a619277270541937908172bb2e5e8bbf222403dd2cbbb.jpg
+  butterfly_garden:
+    title: Butterfly Garden of Dreams
+    description: A space where butterflies of luminous colors drift lazily through the air—each wing bearing the patterns of
+      stars, moons, and happy dreams. The garden smells like honey and hope
+    exits:
+      s: peacock_pavilion
+      w: rose_garden
+    image: bb193cfae6919bc9ebd110e4259dca5873a2121511b643fffe71926335d12ed0.jpg
+  tea_garden:
+    title: A Singing Tea Garden
+    description: A resplendent English garden bathed in soft, dreamy luminescence where rose-laden vines climb trellises of
+      pale gold, their velvet petals humming in gentle, crystalline harmonies as they sway without wind. Delicate
+      teacup-shaped flowers bloom in dusty rose and cream, their petals emanating a warm, sourceless glow that mingles
+      with wisps of steam rising from phantom tea services scattered among cloud-soft hedges that seem to giggle with
+      each passing breeze.
+    exits:
+      e: tea_parlor
+      s: rose_garden
+    image: 974fa145061e3fb51a257d574f6857b3d59cabaaa88f5dd716c9ad7bee32fe62.jpg
+lifespan: 30
+levelBand:
+  min: 25
+  max: 26
+difficultyHint: casual
+image:
+  room: 017181358b58aa1d260308a2be20fc40e8aad12a6334d59e59de6cce3d692d0a.jpg
+  mob: 02cbfb7ac326863a47e44a238bf923cfa76db862aa2163fe7b3faab3ba1e6aec.png
+  item: 9b18eca7bc38788d568b49bd238a2a1faf7943889d0ba2fcdd7d068dd97a1c48.png
+mobs:
+  queen_braelynn_guard:
+    name: Royal Penguin Guard
+    description: An adorable penguin in a tiny, sparkling uniform, standing at attention with miniature sword and shield.
+    tier: standard
+    spawns:
+      - room: guards_barracks
+    image: aae3cf58bd44a1da1baa9f2d45cacba67279a4f3c3f4260ea60e52f500906bbf.png
+    level: 25
+  chief_penguin:
+    name: Chief Waddles
+    description: A distinguished penguin with a captain's hat and a stern expression, leading the guard contingent with pride.
+    tier: elite
+    spawns:
+      - room: training_ground
+    image: 089e4ddb94fdd882c50d95e5ddba3ff11131d039e3a6b9466051c181b28c69ac.png
+    level: 25
+  dancing_stuffed_bear:
+    name: Gregby the Dancing Bear
+    description: A large plush bear that sways and pirouettes, his button eyes twinkling with joy and ancient magic.
+    tier: weak
+    spawns:
+      - room: stuffed_animal_lounge
+    image: 828b704aaf784f84a211304e0269ff2b0f2a87fd05cdfdac0e2fe2168ce6f257.png
+    level: 25
+  tea_set_guardian:
+    name: Enchanted Teapot
+    description: A magical porcelain teapot with a gentle spirit inside, it pours tea and offers wisdom in equal measure.
+    tier: standard
+    spawns:
+      - room: tea_parlor
+    image: 5ad0f134f4a96e2dbd8d2259656a15feeafdfb74a94f5c64d62650fe9e8dbeb3.png
+    level: 25
+  rubber_duck_chef:
+    name: Chef Quackers
+    description: A rubber duck wearing a tiny chef's hat and apron, squeaking orders and managing the kitchen with
+      surprising authority.
+    tier: standard
+    spawns:
+      - room: kitchen_of_wonders
+    image: 04e4e62fa8cf75792788479f306755f8266b5270916736882212a9b1a7f518fd.png
+    level: 25
+  colorful_chicken:
+    name: Rainbow Hen Henrietta
+    description: A plump chicken with feathers in every pastel color, clucking contentedly and pecking at magical corn.
+    tier: weak
+    spawns:
+      - room: chicken_coop
+    image: 49e648bda1adf9b4b13c8bd192d28232e04eb94a2a488c5b43558b6f6e34abf9.png
+    level: 25
+  dream_axolotl:
+    name: Axel the Pink Axolotl
+    description: A serene pink axolotl with a mystical smile, swimming gracefully through crystalline waters and glowing softly.
+    tier: standard
+    spawns:
+      - room: axolotl_grotto
+    image: 5a72672334491fae92c90955564f007c6249698389105d242938306ddbffe0e3.png
+    level: 25
+  magical_peacock:
+    name: Prismatic Peacock
+    description: A majestic peacock whose tail spreads into a fan of colors that shift and shimmer like living rainbows.
+    tier: elite
+    spawns:
+      - room: peacock_pavilion
+    image: f2f133f482a6d09d66c91e967d268c081fde14c496ce55d748f1eee9a61591a0.png
+    level: 25
+  flower_spirit:
+    name: Rose Spirit
+    description: A delicate spirit formed from the essence of impossible-colored flowers, hovering gently above the garden paths.
+    tier: weak
+    spawns:
+      - room: rose_garden
+    image: 2fba06a53edee047bbd8d71104c74d0733dd8dec88e6982aa784eade71a252d9.png
+    level: 25
+  ice_guardian:
+    name: Frostwhisper
+    description: A crystalline entity of pure frozen magic, beautiful and serene, guarding the icy reaches of the kingdom.
+    tier: elite
+    spawns:
+      - room: ice_cavern
+    image: 50d52846ab4ef57b6dc9606885016c38174d38931d848e9218482749b0f9c851.png
+    level: 25
+  dream_butterfly:
+    name: Luna the Luminous Butterfly
+    description: A butterfly with wings that glow like starlight and moon-silver, leaving trails of sparkles as it flies.
+    tier: weak
+    spawns:
+      - room: butterfly_garden
+    image: 80ae6bd378bd326b7fd6d7d14ffd6c7440c976c5304e88570721780e408b6f81.png
+    level: 25
+  mirror_guardian:
+    name: Reflector the Sentinel
+    description: A mysterious guardian made of living mirror-glass, reflecting not images but possibilities and dreams.
+    tier: elite
+    spawns:
+      - room: mirror_grotto
+    image: ad1806541198e2bd1b49d7360781464966931bc3fc8312bc48c6cf96a281855d.png
+    level: 25
+items:
+  penguin_captain_sword:
+    displayName: Miniature Captain's Sword
+    description: A tiny sword with a hilt shaped like a penguin's head, perfect for a penguin guard or a determined young ruler.
+    slot: weapon
+    damage: 3
+    room: armory_vault
+    image: 8402871bb2c0bb7f6a62df475c7d5ed72b0ff71c8bd67094281c25dec3528759.png
+    keyword: penguin_captain_sword
+    level: 25
+    tier: common
+    archetype: damage
+  royal_crown:
+    displayName: Crown of Queen Braelynn
+    description: A delicate crown made of spun sugar and crystallized starlight, sized for a young queen's head. It glows
+      softly with royal authority.
+    slot: head
+    room: throne_hall
+    image: 50b74a07d258780a61997dba6de21b240a679fa7db229a8518c2a936468e360d.png
+    keyword: royal_crown
+    level: 25
+    tier: common
+    archetype: armor
+    armor: 3
+  velvet_cape:
+    displayName: Royal Velvet Cape
+    description: A soft, luxurious cape of midnight-blue velvet trimmed with silver thread, perfect for royal pretend-play
+      or actual kingdom duties.
+    slot: body
+    armor: 6
+    room: dress_up_chamber
+    image: 102756d98b3e6f956082b9299d939f0e238a4b8ad927bc330589712d1dd14331.png
+    keyword: velvet_cape
+    level: 25
+    tier: common
+    archetype: armor
+  silk_gloves:
+    displayName: Enchanted Silk Gloves
+    description: Soft, shimmering gloves that make the wearer's hands feel magical and royal, perfect for handling tea cups
+      or ruling a kingdom.
+    slot: hands
+    room: makeup_salon
+    image: 50f312198cefb9ed950d0db70ab3e3b5a70bfe0e28f772189a708a4fac56c241.png
+    keyword: silk_gloves
+    level: 25
+    tier: common
+    archetype: armor
+    armor: 3
+  magical_teacup:
+    displayName: Self-Pouring Teacup
+    description: A delicate porcelain cup that pours its own tea, never running dry, always at the perfect temperature. A
+      treasure of the tea parlor.
+    stats:
+      WIS: 1
+    room: tea_parlor
+    image: 0f38304466eb2bcc238fbbb1982d762568cecd5645763f2e015b133b477a6676.png
+    keyword: magical_teacup
+  storybook_recipe:
+    displayName: Recipe for Cloud Soup
+    description: A handwritten recipe card with ingredients like 'three cups of sweet dreams' and 'a pinch of rainbow dust.'
+      It smells faintly of vanilla.
+    room: kitchen_of_wonders
+    image: def0ee030205b310ed9cf199f436c6da1a0302a3c8b4cfc4bc0e73b78632a005.png
+    keyword: storybook_recipe
+  crystal_starlight_shard:
+    displayName: Shard of Crystallized Starlight
+    description: A small, sparkling crystal that glows softly in the dark, collected from the Dream Path. It feels warm and
+      comforting to hold.
+    stats:
+      INT: 1
+      WIS: 1
+    room: dream_path
+    image: aa8c262f420b0a9cefce37a4160b4db10dc90c4ec2bd3a4b604616ab89b8126f.png
+    keyword: crystal_starlight_shard
+  axolotl_pendant:
+    displayName: Pink Axolotl Pendant
+    description: A tiny pendant carved from rose quartz in the shape of an axolotl, radiating calm and contentment. A
+      cherished possession from the grotto.
+    stats:
+      WIS: 2
+      CON: 1
+    room: axolotl_grotto
+    image: 1e053e1646840127a07cb20191565ec97d187edf2a83a0de7b2c55be3b5d4134.png
+    keyword: axolotl_pendant
+  peacock_feather_fan:
+    displayName: Prismatic Peacock Feather Fan
+    description: A beautiful fan made from peacock feathers that shift through every color imaginable with each movement,
+      creating a magical breeze.
+    stats:
+      CHA: 2
+    room: peacock_pavilion
+    image: 4a0365df91bcce2ec96aa42762fae714198bca08b2a61b741e4cd045f8d5a063.png
+    keyword: peacock_feather_fan
+  butterfly_wing_bookmark:
+    displayName: Luminous Butterfly Wing Bookmark
+    description: A bookmark fashioned from a butterfly wing that glows softly, perfect for marking your place in dream-tales
+      and storybooks.
+    stats:
+      INT: 1
+    room: butterfly_garden
+    image: 498a4922c286f2fd60b8ae6f547bd472d370a835a73ceaf091d75119e2a3d72a.png
+    keyword: butterfly_wing_bookmark

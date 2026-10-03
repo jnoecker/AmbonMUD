@@ -1,0 +1,480 @@
+zone: peanut
+startRoom: room_0
+rooms:
+  room_0:
+    title: The Throne Room of King Peanut
+    description: A grand chamber bathed in golden dreamlight, where an oversized throne carved from crystallized peanut
+      shell looms above polished marble floors. Above, the sky swirls with colors that shouldn't exist, shifting between
+      game landscapes as if reality itself cannot decide what world it should be.
+    exits:
+      s: room_1
+      e: room_4
+    image: 09e94d147266e1d8af20db502da70d8c2cb8cfd1e3a8411311ccdbb56c212776.jpg
+  room_1:
+    title: The Arena of Ares
+    description: A colossal circular battlefield where the very stones crackle with divine energy, sand scattered across an
+      immense stage. Spectral stands rise on all sides, filled with cheering crowds that fade in and out of existence
+      like half-remembered dreams.
+    exits:
+      n: room_0
+      s: room_2
+      e: room_5
+    image: aab0565de94db4002f1ad9b49a7ee6f88c01f8c690c1a2dcc7807778ab5ba8a4.jpg
+  room_2:
+    title: The Rocket League Stadium
+    description: An impossible soccer field suspended in mid-air, where sleek rocket-powered vehicles zoom across invisible
+      tracks, leaving trails of fire and light. The roar of engines mingles with the excited chants of phantom fans.
+    exits:
+      n: room_1
+      w: room_3
+      s: room_11
+    image: 8b92bb474c582386cf578cd40efe59b906d1e3f3547a2fbaf1beba3b61deb42f.jpg
+  room_3:
+    title: Minecraft Plains
+    description: A blocky landscape of grass and stone stretches endlessly, where cubed sheep graze peacefully while green
+      creepers lurk behind distant hills. The sky above is a perfect gradient of blue, unchanged and eternal like a
+      child's perfect dream.
+    exits:
+      e: room_2
+      w: room_21
+    image: 937ba4f4f752ccbc24d3b3e0b116383457d232263ebf91f8e07f9b7c5ad62759.jpg
+  room_4:
+    title: The Peanut Gardens
+    description: Tall legume stalks grow in orderly rows, their husks gleaming with an otherworldly iridescence beneath a
+      perpetually setting sun. The air smells of earth and something sweet and unnameable.
+    exits:
+      w: room_0
+      s: room_5
+    image: fb194c93d47470f71b1fdef49a927fb9eeda3b190917e9e963bde242d0d3c2cd.jpg
+  room_5:
+    title: The Celestial Library
+    description: Books float freely in this spiraling chamber, their pages turning on unseen winds, containing knowledge
+      both real and imagined. Streams of golden light pour through crystalline windows, illuminating ancient texts
+      beside comic books and strategy guides.
+    exits:
+      n: room_4
+      e: room_6
+      s: room_7
+      w: room_1
+    image: db14e65406e5dc8fbdf15f3835c61b943d9020771e8f35a8c3294bc8701c476b.jpg
+  room_6:
+    title: Creeper Caverns
+    description: A network of dark stone tunnels where green explosive creatures shuffle about, their occasional hisses
+      echoing off the walls. Faint explosions rumble in the distance, and the entire cavern smells of sulfur and burnt
+      stone.
+    exits:
+      w: room_5
+      e: room_10
+    image: 8030ff71b81b9e8e88b5faa8707b6878a0d683162db738c523a3901ed1d9baa0.jpg
+  room_7:
+    title: The Divine War Council
+    description: A chamber where ghostly figures of gods gather around a massive war table, their forms wavering between
+      solid and ethereal. Maps of impossible kingdoms spread across its surface, constantly rearranging themselves.
+    exits:
+      n: room_5
+      s: room_8
+    image: 02f9a52d26b59d712dfed2b7a3f5c2f0097deca8e79ca775117d250aa0acd7c3.jpg
+  room_8:
+    title: The Sheep Pasture
+    description: Endless rolling hills covered in woolly, cubic sheep that graze on pixelated grass, their bleats forming an
+      odd chorus. The horizon glows with the warm colors of a child's bedtime, soft and inviting.
+    exits:
+      n: room_7
+      e: room_9
+      w: room_11
+    image: 84f9e9b85aa7c82b9467712dcdc33a753d2771c9ae5a351306694dcaddd6faeb.jpg
+  room_9:
+    title: The Rocket Garage
+    description: An impossibly large hangar filled with sleek, hovering vehicles in various states of customization, each
+      one thrumming with barely contained power. The walls are covered in crude drawings and designs, as if sketched by
+      an imaginative young mind.
+    exits:
+      w: room_8
+    image: aacd5c03a15bb808fbfe0b92954b07ec957998ed3680c60e4faa14ea9803f87b.jpg
+  room_10:
+    title: The Halls of Champions
+    description: A corridor lined with towering statues of legendary warriors, their stone faces frozen in eternal struggle
+      against invisible foes. Banners in impossible colors flutter from the ceiling, bearing symbols of victory and
+      conquest.
+    exits:
+      w: room_6
+    image: e86bb4978bcba544abcedd8a9d35ed533fd3f71e31f438cdfec15aac5e4bfd76.jpg
+  room_11:
+    title: The Peanut Market
+    description: A bustling square where vendors sell dream-touched goods from stalls made of woven plant matter, the air
+      thick with the scent of roasted legumes and magic. The cobblestones beneath your feet shift color with each step.
+    exits:
+      e: room_8
+      s: room_12
+      w: room_19
+      n: room_2
+    image: c42ff60f2bf7a4961aac441897be7200798d9a770ed13e6e12e133a780f1cb63.jpg
+  room_12:
+    title: The Void Garden
+    description: A place where reality grows thin, with flowers that bloom in impossible colors and trees that exist only
+      partially in this realm. The darkness here is not frightening but peaceful, like the moment before sleep takes
+      hold.
+    exits:
+      n: room_11
+      w: room_13
+    image: 11d6bd7e889d22069a263a1fd86fb9767f5790973b269fe9e4c79b8d6bae19fc.jpg
+  room_13:
+    title: The Tower of War
+    description: A spiraling structure dedicated to Ares, its walls inscribed with battle tactics and strategic diagrams
+      that glow with faint runes. Lightning occasionally arcs between the tower's peaks, as if channeling divine wrath.
+    exits:
+      e: room_12
+      s: room_14
+      w: room_15
+      n: room_19
+    image: 44ae80db8c2d018eda5b6c224222b1bba67ecda99d0f9fb3e2541661de8b5dce.jpg
+  room_14:
+    title: The Mineshaft
+    description: A deep excavation carved through blocks of stone, where ore glimmers in the walls and the echo of pickaxes
+      rings endlessly. The darkness here feels alive, pregnant with both danger and treasure.
+    exits:
+      n: room_13
+      w: room_16
+    image: 224f6afc9f46a8ea1c7eea71c330b08180aa38d518f2cc92cf42183e0a5928d2.jpg
+  room_15:
+    title: The Floating Platforms
+    description: A series of impossibly suspended stone blocks hover in empty air, connected only by faith and the logic of
+      dreams. Rocket-powered cars race across these platforms, defying gravity with each boost.
+    exits:
+      e: room_13
+      n: room_18
+      s: room_16
+    image: 75d94e2b5dfd8f3f8933a405558d713127136dd0b389d8d5d800dad5f343849d.jpg
+  room_16:
+    title: The Crown Chamber
+    description: A circular room where the very air shimmers with royal authority, ornate crowns displayed on velvet
+      pedestals around the walls. The scent of power and destiny lingers here, thick as honeysuckle.
+    exits:
+      e: room_14
+      w: room_17
+      n: room_15
+    image: f82195658eda5f5e441a7426d861cfad8b519f910898c38ffe9e6cd366a27d2e.jpg
+  room_17:
+    title: The Exploding Hills
+    description: Terrain that regularly detonates in controlled bursts of green light and sound, where creepers are born
+      from the earth itself. The ground trembles with each distant explosion, a rhythm as old as the kingdom itself.
+    exits:
+      e: room_16
+      n: room_20
+    image: fe3f4023e023906777feac871c31dfcd6bda0b9a4af5d9bddadb1e152bf3641d.jpg
+  room_18:
+    title: The Divine Colosseum
+    description: A massive amphitheater carved from white stone, its floor stained with the essence of a thousand imaginary
+      battles. The air crackles with divine magic, and phantom applause echoes from the empty stands.
+    exits:
+      s: room_15
+      n: room_21
+      e: room_19
+    image: aace83ea5187d1dc00e05a04d6ab466e9448c3690d164bca7bfc2a2a48ae1cd5.jpg
+  room_19:
+    title: The Wool Storehouses
+    description: Vast warehouses filled with stacks of wool blocks in every color imaginable, their softness a strange
+      contrast to the architectural precision. The aroma is warm and comforting, like a child's favorite blanket.
+    exits:
+      s: room_13
+      w: room_18
+      e: room_11
+    image: cd8ee6730e213ae6299aebd79c124d48a03d92e7d4901852d7f383ab10ea5470.jpg
+  room_20:
+    title: The Rocket Launch Platform
+    description: A sleek launching pad glowing with energy, where vehicles are prepared for their next impossible journey
+      across the sky. The hum of engines and the scent of high-octane fuel permeate this high-tech sanctuary.
+    exits:
+      s: room_17
+      w: room_22
+      n: room_23
+    image: 108b123cd252f73e50461bca788c3d690bf572b0ecdbb48bd615a595d8ec892c.jpg
+  room_21:
+    title: The Council of Kings
+    description: A solemn meeting hall where King Peanut and Queen Braelynn convene with their advisors, the very walls
+      echoing with decisions that shape reality. Moonlight floods through tall windows, casting long shadows of power.
+    exits:
+      s: room_18
+      e: room_3
+    image: a268f27a98aeb59c3b05539844180cf19622695407e981bed3d2019ff51d16fb.jpg
+  room_22:
+    title: The Enchanted Forest
+    description: Trees of impossible geometry stand in a natural cathedral, their leaves shimmering between Minecraft
+      texture and organic reality. Streams of pure magic flow between the roots, tending to soil that grows dreams
+      instead of flowers.
+    exits:
+      e: room_20
+    image: df470c422ea1af5dd892e0a68edf41739078e2a87d94fafe01eae70082dcbf43.jpg
+  room_23:
+    title: The Training Grounds
+    description: An open field scarred by countless practice battles, where warriors hone their skills against magical
+      constructs and divine challenges. The grass here is trampled and resilient, refusing to stay dead.
+    exits:
+      s: room_20
+      n: room_24
+    image: a1f02a43c21d1922519b2e48d155869e83560123f2c5c4da889dc1c339583ce7.jpg
+  room_24:
+    title: The Pixel Waterfalls
+    description: Water falls in perfect rectangular sheets, breaking apart into individual pixels as it descends into a
+      bottomless pool of pure potential. The mist shimmers with colors that exist nowhere else in nature.
+    exits:
+      s: room_23
+      w: room_25
+      n: room_29
+    image: 427ff7b66ee2a092f7814702e8d166677c8e4738b7cc16646ac8ea39859335fe.jpg
+  room_25:
+    title: The Arsenal
+    description: An armory where weapons and armor glow with enchantment, each piece a work of both craft and art. The walls
+      are organized with meticulous care, though dust from past ages settles gently on the finest pieces.
+    exits:
+      e: room_24
+      w: room_26
+    image: 403b537ecb073c7d10956127db936c467b3768d7c1d50b995318433d8ee87bad.jpg
+  room_26:
+    title: The Dream Nexus
+    description: A swirling vortex of color and light where the rules of the kingdom seem to bend and flex, reality becoming
+      suggestion rather than law. Standing here fills you with a sense of infinite possibility.
+    exits:
+      e: room_25
+      w: room_27
+    image: 9b8c135aa4c0851abe359b39de954c7a1dacb5fba88c18013f39a524ab7bd3d2.jpg
+  room_27:
+    title: The Wheat Fields of Plenty
+    description: Vast fields of golden grain stretch to the horizon, swaying in a wind that smells of harvest and
+      prosperity. The sky above is perpetually warm and inviting, promising abundance.
+    exits:
+      e: room_26
+      s: room_28
+    image: c7e2ea00957601a2c49e5215582c786febf0d798dbe071be9af693b694149d94.jpg
+  room_28:
+    title: The Fortress of Peanut
+    description: A massive fortification built from hardened legume shell, its walls thick and imposing, designed to
+      withstand any siege. Banners bearing the royal seal flutter proudly from every turret and tower.
+    exits:
+      n: room_27
+      s: pbrae:upper_landing
+    image: 8e10071cbde532f2cc1e75b193028bbb773e2e74d07c8fa7ef2c52170101eac0.jpg
+  room_29:
+    title: The Realm's Edge
+    description: Where the kingdom fades into swirling mists and impossible geometry, the boundary between dream and reality
+      becomes tangible. Standing here, you feel the weight of a child's imagination pressing against the fabric of
+      existence itself.
+    exits:
+      s: room_24
+    image: 84e9914d6abfa8171d1a46c07cb32850e64a8d55045bfef7bd8db891bac6347a.jpg
+lifespan: 30
+levelBand:
+  min: 20
+  max: 21
+difficultyHint: challenging
+image:
+  room: bef55e7bc1f81520ebbea8e69739dede9930c00d1f0b668ad9cad45e36484468.jpg
+  mob: 68be93b5bcfb714dee4e088cebd01d3c205be4fb4db8489978b109eed6c421ec.png
+  item: 9d2994ec6309f9dad604bbb9e7a3feb1985c705fb4dbc13a1e80f166848b0c28.png
+mobs:
+  ares_warrior:
+    name: Ares's Chosen Warrior
+    description: A spectral figure clad in divine armor, crackling with the raw power of war itself, eyes blazing with holy fury.
+    tier: elite
+    spawns:
+      - room: room_1
+    image: 97325cd016a042584ab9a26c016fc61f516339022ff7c33b89259d235fc09f7e.png
+    level: 21
+  rocket_automaton:
+    name: Rocket-Powered Automaton
+    description: A sleek mechanical construct hovering on jets of blue flame, its chassis covered in aerodynamic plating and
+      exhaust vents.
+    tier: standard
+    spawns:
+      - room: room_2
+    image: 5b744a26a3ea7c7f4b46256db3c9e36c49280c4a4045c8286c3735f7cdafac71.png
+    level: 21
+  creeper_horde:
+    name: Creeper Horde
+    description: A mass of green explosive entities, hissing and shuffling forward with malevolent intent, their forms
+      barely containing the destructive power within.
+    tier: standard
+    spawns:
+      - room: room_6
+    image: 809f4f8ded2e849ca0526dfefe434a0512025d6fb1a0fa7100511ae7e37bc54b.png
+    level: 21
+  minecraft_sheep:
+    name: Enchanted Minecraft Sheep
+    description: A cubic woolly creature, deceptively peaceful in appearance, though its wool glimmers with dangerous magic.
+    tier: weak
+    spawns:
+      - room: room_3
+    image: c1f8082bcfd8d981d6b28d0ef416101f1b9df38e065d0080cce8aa5e9d025444.png
+    level: 20
+  dream_guardian:
+    name: Guardian of Dreams
+    description: A towering figure woven from starlight and shadow, its form constantly shifting between solid and ethereal,
+      serving as protector of the realm's deepest secrets.
+    tier: elite
+    spawns:
+      - room: room_12
+    image: ae6a06f7374e38f04da80dd0ea2b799bfb521f6b25cbd9d2f022c28e7c98aaaf.png
+    level: 21
+  war_priest:
+    name: War Priest of Ares
+    description: A divine servant wreathed in holy flame, wielding both scripture and sword with equal fervor, preaching the
+      gospel of glorious combat.
+    tier: standard
+    spawns:
+      - room: room_13
+    image: 508798f5b84d9e929a088df2920fe6bfe84875870c9c3e9ac10216574a7ba9f0.png
+    level: 21
+  pixel_horror:
+    name: Pixelated Horror
+    description: A creature of pure geometric chaos, its form composed of jagged blocks and impossible angles, existing
+      between states of matter.
+    tier: standard
+    spawns:
+      - room: room_14
+    image: 707a97b415628d0a1d69ea75ce7822d838e804dc5f5ba5dc269a590d1083e872.png
+    level: 21
+  flying_creeper:
+    name: Volatile Flying Creeper
+    description: A particularly malevolent creeper that has taken to the skies, leaving trails of explosive potential in its wake.
+    tier: weak
+    spawns:
+      - room: room_17
+    image: e5851dfc9790078102cd5e2acfe4d1fa0b5c6a28f91dea5798a43077dc097b01.png
+    level: 20
+  god_champion:
+    name: God's Champion
+    description: A warrior blessed by divine authority, their armor shimmering with otherworldly power, movements perfectly
+      precise and devastating.
+    tier: boss
+    spawns:
+      - room: room_18
+    image: bf8008c6bee996cd47f769481efd4f8f7e56c3da7dbafdfc140b3faaf2d3cbee.png
+    level: 21
+  rocket_racer:
+    name: Rogue Rocket Racer
+    description: An agile pilot mounted in a stolen rocket-powered vehicle, zipping across the landscape with reckless speed
+      and surprising combat skills.
+    tier: standard
+    spawns:
+      - room: room_20
+    image: d00a2d1d7ea87e95e673193738833b3c6a1f82cce28d3e4b1166a0d6404aaf85.png
+    level: 21
+  forest_spirit:
+    name: Spirit of the Enchanted Forest
+    description: An ancient being of nature and magic, its form composed of wood and living energy, ancient beyond the
+      memory of kingdoms.
+    tier: elite
+    spawns:
+      - room: room_22
+    image: 037f5ee3d9234e1dea5a3f71671a07cd000693a7ad6c24081653b335cf89aa58.png
+    level: 21
+  void_entity:
+    name: Entity from the Void
+    description: A creature that should not exist, pulled from the spaces between dreams, hunger and chaos given physical form.
+    tier: boss
+    spawns:
+      - room: room_26
+    image: 699e0197a47ce3a9178ad174fb0f66d480dfad035887ace86293037da4f4256a.png
+    level: 21
+items:
+  crown_of_peanut:
+    displayName: Crown of King Peanut
+    description: A magnificent crown crafted from pearlescent peanut shell, inlaid with gems that glow with childish wonder
+      and regal authority.
+    slot: head
+    room: room_16
+    keyword: crown_of_peanut
+    image: 4d5c7c57f149ddc4d164b14941e28c559d35200b6363da9aaae13359a87a9c78.png
+    level: 20
+    tier: common
+    archetype: armor
+    armor: 3
+  ares_spear:
+    displayName: Spear of Ares
+    description: A divine weapon crackling with holy war energy, its tip stained with the essence of a thousand imaginary battles.
+    slot: weapon
+    damage: 3
+    room: room_13
+    keyword: ares_spear
+    image: fd6cc8a930dbad06baaad3fe2d7d1044878d6ec08f86b4f183bff7b1fd0d7b8b.png
+    level: 20
+    tier: common
+    archetype: damage
+  rocket_gauntlets:
+    displayName: Rocket Booster Gauntlets
+    description: Sleek metallic gloves that hum with jet engine power, capable of unleashing bursts of speed and force.
+    slot: hands
+    room: room_9
+    keyword: rocket_gauntlets
+    image: 5659605c8a09ed9078d4acc1a89729a45c484c36be5326c51b7dbba69e3d5cc2.png
+    level: 20
+    tier: common
+    archetype: armor
+    armor: 3
+  dreamweave_armor:
+    displayName: Dreamweave Plate Armor
+    description: Ethereal armor that shimmers between states of matter, simultaneously light and incredibly protective,
+      woven from the fabric of Peanut's dreams.
+    slot: body
+    armor: 6
+    room: room_21
+    keyword: dreamweave_armor
+    image: 52ae67658b35c61db357d83fed1c5024b3aec3ffb0345aaa4d86e88c41900c03.png
+    level: 20
+    tier: common
+    archetype: armor
+  mineshaft_pickaxe:
+    displayName: Enchanted Mining Pickaxe
+    description: A tool that glows with the essence of discovery, capable of striking both ore and enemies with equal precision.
+    slot: weapon
+    damage: 3
+    room: room_14
+    keyword: mineshaft_pickaxe
+    image: 65b1542a75bdd2dfa0a9ff80ae64383e2e924e7ecb65a10854a66cb7b2c65bf5.png
+    level: 20
+    tier: common
+    archetype: damage
+  wool_cloak:
+    displayName: Comfort Wool Cloak
+    description: A cape woven from the softest minecraft wool, its warmth both physical and emotional, providing solace and
+      protection.
+    slot: body
+    armor: 6
+    room: room_19
+    keyword: wool_cloak
+    image: fb344ea07719c53a471c95a854c6224d07f0ae1e2d18a180e031f5cb6faf2c00.png
+    level: 20
+    tier: common
+    archetype: armor
+  divine_pendant:
+    displayName: Pendant of Divine Favor
+    description: A small talisman hanging from a silver chain, inscribed with symbols of Ares, granting communion with the divine.
+    stats:
+      INT: 2
+      WIS: 2
+    room: room_7
+    keyword: divine_pendant
+    image: e31bb4047f37be2c73060c54ed2ed0a764554aa102c1491e056559f89d9439e1.png
+  pixel_dust:
+    displayName: Vial of Pixel Dust
+    description: Glowing fragments of crystallized dream matter, shimmering with potential and magic, capable of enhancing
+      spells or items.
+    room: room_15
+    keyword: pixel_dust
+    image: 929e5471832c2982d146dee42d471e76860b5504ecbd1a5f1a18097fece55241.png
+  roasted_peanuts:
+    displayName: Royal Roasted Peanuts
+    description: A bag of perfectly roasted legumes from the royal gardens, their aroma intoxicating and their taste
+      restorative to body and spirit.
+    room: room_4
+    keyword: roasted_peanuts
+    image: ee6065141425f4feb12d82ead8557633043c4777a7202d91c5b958066d018642.png
+  strategy_grimoire:
+    displayName: Grimoire of War Strategy
+    description: An ancient tome filled with divine tactics and battle formations, its pages glowing with knowledge that
+      transcends mere tactics.
+    stats:
+      INT: 3
+    room: room_5
+    keyword: strategy_grimoire
+    image: b457edaeec613d72fbca7378b4370b48bc92d0d279378891c7c4f211e7b6b7e3.png

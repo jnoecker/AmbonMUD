@@ -1,0 +1,796 @@
+zone: nightmare_alley
+startRoom: the_crooked_entryway
+rooms:
+  the_crooked_entryway:
+    title: The Crooked Entryway
+    description: Warped doorframes lean at impossible angles, their wood grain seeming to writhe in your peripheral vision.
+      The air tastes of copper and old candy.
+    exits:
+      n: the_stretching_corridor
+      w: the_toy_box_chamber
+      e: the_playground_of_teeth
+      s: the_bedroom_of_eyes
+    image: bb7cbd3afb133e4f62bc857b650f388df034f4ac7d030308cb10999b62b36b9c.jpg
+  the_stretching_corridor:
+    title: The Stretching Corridor
+    description: The hallway elongates before you, walls breathing in and out with a sickly rhythm. Shadows pool in corners
+      that shouldn't exist.
+    exits:
+      s: the_crooked_entryway
+      n: pixel_haven:crazy_road_intersection_point
+    image: ffb51fe4d5e830654fa0f3c68f704616bc70c682b58cf0bece99d3a2cc9150d1.jpg
+  the_toy_box_chamber:
+    title: The Toy Box Chamber
+    description: Enormous wooden toys scattered about are rendered grotesque by their scale—a doll's head the size of a
+      horse, blocks stacked like dark towers. Dust motes drift like tiny eyes watching.
+    exits:
+      e: the_crooked_entryway
+      n: the_nursery_of_whispers
+    image: f29da8171db4c7578e6f2dfdd5ac771676484e457c70a5ef50f48c6b2e0fc1f8.jpg
+  the_nursery_of_whispers:
+    title: The Nursery of Whispers
+    description: Oversized cradles creak despite the absence of wind, and lullabies echo from walls that seem to speak.
+      Faded wallpaper peels like shedding skin.
+    exits:
+      s: the_toy_box_chamber
+    image: 761493771fd30705b726d40a9659151a2d1af4a940891aebcc6927e505df8e68.jpg
+  the_playground_of_teeth:
+    title: The Playground of Teeth
+    description: Swings hang too high to touch, creaking in a syncopated rhythm. The sandbox is stained dark, and sharp
+      shadows stretch across equipment designed for a child's nightmares.
+    exits:
+      w: the_crooked_entryway
+      e: the_school_desk_hall
+      s: the_sidewalk_of_chalk
+    image: 8c70633aeb51f38301ac8d295baaa5d99c0c830b1f6a7852b546a566ee6d69df.jpg
+  the_school_desk_hall:
+    title: The School Desk Hall
+    description: Desks of impossible proportions loom like monuments, their surfaces scarred with ghostly chalk marks that
+      seem to shift when you blink. A broken bell chimes without being struck.
+    exits:
+      w: the_playground_of_teeth
+      s: the_kitchen_of_hunger
+    image: 2bc0e4e94f82fb281b40377e3153450aeb41b91d4094cf227ae9ac1b83357076.jpg
+  the_kitchen_of_hunger:
+    title: The Kitchen of Hunger
+    description: Looming cookware casts jagged shadows across countertops that stretch into darkness. The smell of burnt
+      sugar and something acrid fills the space.
+    exits:
+      n: the_school_desk_hall
+      e: the_garden_of_thorns
+    image: 929f965f7b5535875646d89f5323e118a4c79c8a2bc78562f988a0b991568cd9.jpg
+  the_bedroom_of_eyes:
+    title: The Bedroom of Eyes
+    description: An enormous bed dominates the room, its quilted surface patterned with shapes that almost look like
+      watching faces. The closet door hangs open, leading only to more darkness.
+    exits:
+      n: the_crooked_entryway
+      w: the_hallway_of_doors
+      s: the_stairwell_of_descent
+    image: 0ffed1f98643b52f0ae21ff3f62be539f10032335188c53937b46131e7dc52e5.jpg
+  the_hallway_of_doors:
+    title: The Hallway of Doors
+    description: Countless doors line both walls, each slightly ajar, breathing out whispers and cold air. You cannot tell
+      which doors lead forward and which inward.
+    exits:
+      e: the_bedroom_of_eyes
+      s: the_mirror_gallery
+    image: ac038ec7f11b1b8eb74eed44c0c03f5a3df5e9aab4aeaadbbef27d48e4e3aec1.jpg
+  the_garden_of_thorns:
+    title: The Garden of Thorns
+    description: Oversized flowers twist with thorn-studded stems, their petals dark as bruises. The soil beneath your feet
+      feels warm and wrong.
+    exits:
+      w: the_kitchen_of_hunger
+    image: cf8806956f6a759ef14285a33c0b3cadcd06469552e87ec20eb4feee6f403c23.jpg
+  the_mirror_gallery:
+    title: The Mirror Gallery
+    description: Tall mirrors line the walls, reflecting the room but not quite right—your reflection always seems to be
+      moving separately. They cloud with breath that isn't yours.
+    exits:
+      n: the_hallway_of_doors
+      e: the_stairwell_of_descent
+      s: the_attic_of_secrets
+    image: 22ffa548d5499f1bb531ea14c985077dae4e1c79b7a3403e0ca194012dfef032.jpg
+  the_stairwell_of_descent:
+    title: The Stairwell of Descent
+    description: Stairs spiral downward, each step painted a different shade of black. The walls crowd inward the deeper you
+      look, and the air grows heavier with each phantom step.
+    exits:
+      w: the_mirror_gallery
+      n: the_bedroom_of_eyes
+      s: the_basement_darkness
+    image: 0a437e377f8a14d06e185315f400334e65219089edd71ed169577ba24b62b68e.jpg
+  the_attic_of_secrets:
+    title: The Attic of Secrets
+    description: Rafters crisscross overhead like skeletal fingers. Forgotten items sit in shadows, and the scent of dust
+      and old paper permeates the cramped space.
+    exits:
+      n: the_mirror_gallery
+      e: the_basement_darkness
+      s: the_theatre_of_silhouettes
+    image: f2de5d7780c99bdc4b060ed454ebe5d0cdd55aa80bc9abb0e2fb894f6b1b3a2c.jpg
+  the_basement_darkness:
+    title: The Basement Darkness
+    description: Dim phosphorescence barely illuminates concrete walls that weep with moisture. Something moves in the
+      deepest shadows, just out of focus.
+    exits:
+      w: the_attic_of_secrets
+      s: the_library_of_lost_words
+      e: the_closet_within
+      n: the_stairwell_of_descent
+    image: 7fc7d80c8d794616c08e73848205f48ee4eaaa9dae4aae9ce00bbd88ee7f7656.jpg
+  the_library_of_lost_words:
+    title: The Library of Lost Words
+    description: Shelves tower overhead, their books bound in dark leather. The words on the spines change when you're not
+      looking directly at them.
+    exits:
+      n: the_basement_darkness
+      s: the_clock_chamber
+    image: 40df1ba94ca6ad8a31c4c65548821432d513fe2ca004ea30c7c6ed414797716a.jpg
+  the_clock_chamber:
+    title: The Clock Chamber
+    description: An enormous clock face occupies one wall, its hands moving backward in stuttering jerks. Tick-tock echoes
+      like a heartbeat gone wrong.
+    exits:
+      n: the_library_of_lost_words
+    image: 6636b811dba7579128af3d114d7e4b98d50efe0a70a4667c615dbacb0a0d9650.jpg
+  the_theatre_of_silhouettes:
+    title: The Theatre of Silhouettes
+    description: A stage looms with crimson curtains that never quite open. Shadow-puppet figures move behind translucent
+      screens, their gestures unnatural and purposeful.
+    exits:
+      n: the_attic_of_secrets
+    image: aefab67ed5695b07116eece959894d32f58de27b47335f85c515666301966e45.jpg
+  the_closet_within:
+    title: The Closet Within
+    description: An endless closet crammed with coats and fabric that seems to shift and breathe. The darkness inside never
+      quite recedes, no matter how much light you bring.
+    exits:
+      w: the_basement_darkness
+      n: the_cellar_of_stones
+      s: the_cinema_of_screams
+    image: de4e46d24af152cd512c139b8925b1c4af2ec4f84e91336734fa8f69c267d40b.jpg
+  the_cellar_of_stones:
+    title: The Cellar of Stones
+    description: Rough stone walls close in around you, and water drips with irregular rhythm. The floor is uneven,
+      scattered with objects you can't quite identify.
+    exits:
+      s: the_closet_within
+      n: the_sidewalk_of_chalk
+      e: the_balloon_forest
+    image: 696afaf532f5188f301ee427c00e10c36bb764d4514e3074aaa703d53d9d3c0f.jpg
+  the_sidewalk_of_chalk:
+    title: The Sidewalk of Chalk
+    description: Pastel chalk drawings cover the ground, depicting scenes that shift disturbingly when observed. The sky
+      above is perpetually twilight, caught between day and something worse.
+    exits:
+      s: the_cellar_of_stones
+      n: the_playground_of_teeth
+    image: ac38f256a780e276f918ad92afb3951c4d878bb64cbf2fa89227a3a911a5efad.jpg
+  the_balloon_forest:
+    title: The Balloon Forest
+    description: Inflatable creatures and shapes hang suspended at various heights, their bright colors sickly-sweet against
+      the murk. They bob without air currents.
+    exits:
+      w: the_cellar_of_stones
+      s: the_candy_shop_of_rust
+    image: 446022803ffbc3ff1fa2bf1844ff3679dcab8a39cf800932343168d7dd1a967d.jpg
+  the_candy_shop_of_rust:
+    title: The Candy Shop of Rust
+    description: A counter overflows with confections behind warped glass. The colors are too vivid, the scent too thick,
+      and nothing appears fresh despite the array.
+    exits:
+      n: the_balloon_forest
+      s: the_carousel_of_regret
+      e: the_bridge_of_whispers
+    image: 6c2294c1edd4b09447b5bffdc23a8762f5ae7ff995ea00fa87b55bcf7af747ea.jpg
+  the_carousel_of_regret:
+    title: The Carousel of Regret
+    description: Wooden horses twist on a frozen platform, their painted eyes tracking your movement. Tinny music plays from
+      no visible source.
+    exits:
+      n: the_candy_shop_of_rust
+      w: the_cinema_of_screams
+      s: the_forest_of_pencils
+    image: be9c49e9c7bff19b1f90025a87a043feb52292c7a15bed4b5a25c9748add992a.jpg
+  the_cinema_of_screams:
+    title: The Cinema of Screams
+    description: Red velvet seats face a silver screen projecting nothing but static and shadow. Popcorn rots in forgotten
+      containers, releasing sickly-sweet vapors.
+    exits:
+      n: the_closet_within
+      s: the_pond_of_reflections
+      e: the_carousel_of_regret
+    image: 615bf6e5ede9f6cd77a9571024aa973e8bcab1a6f7af277990bdad79d529f32f.jpg
+  the_pond_of_reflections:
+    title: The Pond of Reflections
+    description: Still black water reflects nothing accurate. The surface ripples without cause, and you sense something
+      vast and patient beneath.
+    exits:
+      n: the_cinema_of_screams
+      e: the_forest_of_pencils
+    image: 044bc4111dd7ee6a4210e6a035bdfe73f0394bb6a5866926a120f9632757e6ff.jpg
+  the_forest_of_pencils:
+    title: The Forest of Pencils
+    description: Impossibly tall pencils stand like trees, their erasers worn away to nothing. The ground is carpeted with
+      shavings that crunch ominously underfoot.
+    exits:
+      w: the_pond_of_reflections
+      s: the_mansion_foyer
+      e: the_garden_wall
+      n: the_carousel_of_regret
+    image: 23fadf5072c2fda7acfdb2b7b0af85a3c9d57c7755c47897d81ddb5a3bb63c39.jpg
+  the_bridge_of_whispers:
+    title: The Bridge of Whispers
+    description: A slender bridge spans an invisible chasm, and voices rise from below in conversations you almost
+      understand. The rails are too low to be safe.
+    exits:
+      w: the_candy_shop_of_rust
+    image: 7ecf7854e8472301520f70768712bbec0d00ad4c2ba86ee0a814283592db32c0.jpg
+  the_mansion_foyer:
+    title: The Mansion Foyer
+    description: A grand entrance rises impossibly high, its chandeliers unlit despite being occupied by flickering shapes.
+      Marble floors reflect something that isn't in the room.
+    exits:
+      n: the_forest_of_pencils
+    image: 70c2a289dd71e4c6d59f1773a03f748f770439fe1e7943399e6a57ef9ad7a67d.jpg
+  the_garden_wall:
+    title: The Garden Wall
+    description: A brick wall covered in creeping vines forms a boundary. Beyond it, you sense another layer to this
+      nightmare, watching and waiting.
+    exits:
+      w: the_forest_of_pencils
+      s: the_heart_of_the_nightmare
+    image: ba51fcc110d0db9c1bca29126da40cd3eff96e2560b29c40011b85065fb47a57.jpg
+  the_heart_of_the_nightmare:
+    title: The Heart of the Nightmare
+    description: Here, at the deepest point, reality frays like old fabric. The boundaries between rooms blur, and all paths
+      seem to lead back to this exact spot.
+    exits:
+      n: the_garden_wall
+    image: a326e654d517f3a90a3054a0c63d4877c7245f5955f02294b8cfc330114fa291.jpg
+lifespan: 30
+levelBand:
+  min: 15
+  max: 16
+difficultyHint: casual
+image:
+  room: 2e01136700ee518aecb3f91638b2fa346ccb8b43af65d63233a2490612a294b5.jpg
+  mob: 5db2724de8ebc1ca2606c677d857fa8dc447f6ee4e3c7b0109124cdefd254dd7.png
+  item: f42de8ca5fa58fa03005fc99ffe468af5dec687bbcc142e2467145f479bbc430.png
+mobs:
+  shadow_child:
+    name: Shadow Child
+    description: A silhouette of a young figure that flickers and distorts, leaving dark stains on the air around it.
+    tier: weak
+    spawns:
+      - room: the_stretching_corridor
+    level: 15
+    image: d62e0fe90f90177c9c38901accdae77c22fc72bc2665cac96fd56415c2f21d32.png
+  toy_guardian:
+    name: Toy Guardian
+    description: A massive wooden doll with porcelain joints that move with jerky, unnatural grace. Its painted smile never wavers.
+    tier: standard
+    spawns:
+      - room: the_toy_box_chamber
+    level: 15
+    drops:
+      - itemId: gen_uncommon_legs
+        chance: 0.4
+      - itemId: gen_uncommon_head
+        chance: 0.4
+    image: a7170e70749178a30742df5336395f3967cdcdf1fe7ce87bb5b705c2b77710f9.png
+  cradle_speaker:
+    name: Cradle Speaker
+    description: A whispered voice given form, hovering near the oversized cradles. It leaves frost in its wake and hums
+      broken lullabies.
+    tier: weak
+    spawns:
+      - room: the_nursery_of_whispers
+    level: 15
+    drops:
+      - itemId: gen_common_legs
+        chance: 0.6
+    image: 3ac1f45223eb73aa64b9d92650f20ff0a401f08fd2799f028d0d912864fdff16.png
+  swing_beast:
+    name: Swing Beast
+    description: A creature of tangled chains and rusted metal, its form changes with each swing. It cackles like a broken
+      recording.
+    tier: standard
+    spawns:
+      - room: the_playground_of_teeth
+    level: 15
+    drops:
+      - itemId: gen_uncommon_feet
+        chance: 0.4
+    image: ca1559d1bfdc02e823d9102a242c75ff98cc5b23b877e36d67da052c5e689ac5.png
+  chalk_scraper:
+    name: Chalk Scraper
+    description: A being composed entirely of chalk dust and broken writing implements, leaving marks wherever it moves.
+    tier: weak
+    spawns:
+      - room: the_school_desk_hall
+    level: 15
+    drops:
+      - itemId: gen_common_feet
+        chance: 0.6
+    image: 5e6d9d83da000a818d9efc96a372a400f40f3edb67d626a2f92790bf345804e7.png
+  hunger_entity:
+    name: Hunger Entity
+    description: A twisted thing made of pots, pans, and utensils fused together unnaturally. It reeks of burnt offerings.
+    tier: elite
+    spawns:
+      - room: the_kitchen_of_hunger
+    level: 15
+    drops:
+      - itemId: gen_rare_warrior_weapon
+        chance: 0.2
+      - itemId: gen_rare_mage_head
+        chance: 0.2
+      - itemId: gen_rare_cleric_feet
+        chance: 0.2
+      - itemId: gen_rare_rogue_weapon
+        chance: 0.2
+      - itemId: gen_rare_ruler_head
+        chance: 0.2
+    image: 1818c823ff77bd4f49e97c317b4ca427a005479f9f688337b015868d8253b2fa.png
+  quilted_watcher:
+    name: Quilted Watcher
+    description: A creature that emerges from the bedroom quilts, its many eyes opening across a patchwork body. It watches
+      everything simultaneously.
+    tier: standard
+    spawns:
+      - room: the_bedroom_of_eyes
+    level: 15
+    drops:
+      - itemId: gen_uncommon_hands
+        chance: 0.4
+    image: a66872f59e4d7256626e93a1d7c0caaa4a00d843ddec508090936f1df0fe79fa.png
+  door_sentinel:
+    name: Door Sentinel
+    description: A towering figure made of doorframes and hinges, its footsteps echo through multiple rooms at once.
+    tier: standard
+    spawns:
+      - room: the_hallway_of_doors
+    level: 15
+    drops:
+      - itemId: gen_uncommon_weapon
+        chance: 0.4
+    image: 3f72d26016d51688d39b09bc1f40114d1b161a99abdad470d857f45eb7e8f296.png
+  thorn_crawler:
+    name: Thorn Crawler
+    description: A massive insect-like thing with a body of twisted stems and petals of deepest black. It clicks and chittering.
+    tier: standard
+    spawns:
+      - room: the_garden_of_thorns
+    level: 15
+    drops:
+      - itemId: gen_uncommon_chest
+        chance: 0.4
+    image: 09c0d715191c43078398e2394f844a3e3bc153b6768ed8b7092104cb50553281.png
+  mirror_twin:
+    name: Mirror Twin
+    description: A doppelgänger pulled from the fractured reflections, moving in concert with its surroundings but never
+      quite in sync.
+    tier: elite
+    spawns:
+      - room: the_mirror_gallery
+    level: 15
+    drops:
+      - itemId: gen_rare_warrior_hands
+        chance: 0.2
+      - itemId: gen_rare_mage_chest
+        chance: 0.2
+      - itemId: gen_rare_cleric_legs
+        chance: 0.2
+      - itemId: gen_rare_rogue_hands
+        chance: 0.2
+      - itemId: gen_rare_ruler_chest
+        chance: 0.2
+    image: e16792723a35efe7963f2f607a8ce38bdb7acb2220d0fe202db7062de5c3e05a.png
+  stair_keeper:
+    name: Stair Keeper
+    description: An elongated figure that coils around the descending steps, its limbs counting the endless stairs in a
+      rasping whisper.
+    tier: weak
+    spawns:
+      - room: the_stairwell_of_descent
+    level: 15
+    drops:
+      - itemId: gen_common_hands
+        chance: 0.6
+    image: 1578a5675526b2ab0e31dbbf455d67a9b7df3360a460abf7b06310d8b2f5f2d3.png
+  nightmare_lord:
+    name: Nightmare Lord
+    description: The apex predator of this realm, a being of pure dread that manifests as shifting shadow and terrible
+      presence. Its form defies comprehension.
+    tier: boss
+    spawns:
+      - room: the_heart_of_the_nightmare
+    level: 16
+    drops:
+      - itemId: gen_epic_warrior_weapon
+        chance: 0.1
+      - itemId: gen_epic_mage_chest
+        chance: 0.1
+      - itemId: gen_epic_cleric_head
+        chance: 0.1
+      - itemId: gen_epic_rogue_legs
+        chance: 0.1
+      - itemId: gen_epic_ruler_feet
+        chance: 0.1
+    image: 1e69cb583549810b7025e0f45f2dee808e9b73cb6f66a14582d0a2e40b62a0b5.png
+items:
+  doll_mask:
+    displayName: Porcelain Doll Mask
+    description: A cracked porcelain mask with painted features frozen in an eternal smile. Wearing it makes you feel watched.
+    slot: head
+    room: the_toy_box_chamber
+    level: 15
+    tier: common
+    archetype: armor
+    armor: 3
+    image: 9e6b1c643816ebb7125e6cdd4c18e8db81e1e0fcd8bf1f99cc7c710532802a9f.png
+    keyword: doll_mask
+  wooden_sword:
+    displayName: Oversized Wooden Sword
+    description: A child's toy sword carved from dark wood, far too large to be comfortable but sturdy enough to be dangerous.
+    slot: weapon
+    damage: 3
+    room: the_playground_of_teeth
+    level: 15
+    tier: common
+    archetype: damage
+    image: 7d69a22f50792f5797e73e929710b06e7243d803956f2eb6343557a95ff919f3.png
+    keyword: wooden_sword
+  chalk_robes:
+    displayName: Chalk-Dust Robes
+    description: Robes that perpetually shed fine chalk dust, leaving marks wherever you walk. Words appear in the dust, then fade.
+    slot: body
+    armor: 6
+    room: the_school_desk_hall
+    level: 15
+    tier: common
+    archetype: armor
+    image: 03a060504afbba07c5bec1d08d22ab8af81a72b0a878e1308148b0bffc301524.png
+    keyword: chalk_robes
+  burnt_gloves:
+    displayName: Burnt Kitchen Gloves
+    description: Heavy oven mitts singed black, still radiating faint heat. They smell of caramelized sugar and ash.
+    slot: hands
+    armor: 3
+    room: the_kitchen_of_hunger
+    level: 15
+    tier: common
+    archetype: armor
+    image: 1ae371dbedd353ba9ca07e51a9a5e6c94eda6b5775d1a0ef0285b7941be0389d.png
+    keyword: burnt_gloves
+  quilt_patch:
+    displayName: Quilted Patch of Security
+    description: A protective amulet woven from quilted fabric scraps.
+    stats:
+      WIS: 1
+    room: the_bedroom_of_eyes
+    image: 86b8576a7bce662a4c872b8500364dbe7ee6a8f48060e0c5613ea3edead63c50.png
+    keyword: quilt_patch
+  brass_key:
+    displayName: Tarnished Brass Key
+    description: A large key that doesn't match any lock you've seen, yet feels important. It's warm in your hand and hums softly.
+    room: the_hallway_of_doors
+    image: 2007e6d9027fb6f31baefe5e044624e2e71a9186448b811c370c6fccf735b234.png
+    keyword: brass_key
+  thorn_crown:
+    displayName: Crown of Thorns and Petals
+    description: A twisted circlet of black thorns intertwined with the darkest petals. It whispers of growth and pain.
+    slot: head
+    room: the_garden_of_thorns
+    level: 15
+    tier: common
+    archetype: armor
+    armor: 3
+    image: 7f4ca40773ea954b112cf4fdb558000a338b13cca525a22822d22251ab7da488.png
+    keyword: thorn_crown
+  mirror_shard:
+    displayName: Shard of Fractured Mirror
+    description: A piece of reflective glass that shows fragments of reflections that don't quite belong. It cuts if you're
+      not careful.
+    slot: weapon
+    damage: 3
+    room: the_mirror_gallery
+    level: 15
+    tier: common
+    archetype: damage
+    image: ae61b4d9954cf2e109fa01ec404dd68c9095ef14592e5211b60dfde528b32427.png
+    keyword: mirror_shard
+  clock_hand:
+    displayName: Backward Clock Hand
+    description: A large iron hand from a clock, still ticking softly. Time feels wrong in its presence.
+    stats:
+      INT: 2
+      DEX: -1
+    room: the_clock_chamber
+    image: 5fce765d76ecbe3274d085985264090b3bbd88ed09121788140e586aed4af615.png
+    keyword: clock_hand
+  shadow_cloak:
+    displayName: Cloak of Shadows
+    description: A garment that seems to absorb light, making it difficult to focus on its wearer. It smells of darkness and
+      old fears.
+    slot: body
+    armor: 6
+    room: the_heart_of_the_nightmare
+    level: 15
+    tier: common
+    archetype: armor
+    image: 8c40fe913ad34fd2b6bc20dad7013446a6de5d2379dc41b5013009c7c6de0d49.png
+    keyword: shadow_cloak
+  gen_epic_warrior_weapon:
+    displayName: Epic Warrior Blade
+    description: Autogenerated epic-tier weapon for this zone. Replace the name and description, then keep editing.
+    slot: weapon
+    tier: epic
+    classes:
+      - WARRIOR
+    level: 16
+    archetype: damage
+    damage: 4
+    image: 84cd6ad8ac93076fe12d0bc00a00b183e02686af712df5f1e5777be1169b204a.png
+    keyword: gen_epic_warrior_weapon
+  gen_epic_mage_chest:
+    displayName: Epic Mage Cuirass
+    description: Autogenerated epic-tier chest for this zone. Replace the name and description, then keep editing.
+    slot: chest
+    tier: epic
+    classes:
+      - MAGE
+    level: 16
+    archetype: armor
+    armor: 4
+    image: 7070ff7006d4d8ff7b6e58a26d0f5b678099bfb56a2ccb39132bd1c099a0e177.png
+    keyword: gen_epic_mage_chest
+  gen_epic_cleric_head:
+    displayName: Epic Cleric Helm
+    description: Autogenerated epic-tier head for this zone. Replace the name and description, then keep editing.
+    slot: head
+    tier: epic
+    classes:
+      - CLERIC
+    level: 16
+    archetype: armor
+    armor: 4
+    image: 4fd779fd9ec53b8bd0c78f19773dea6726e13bde742fa8eda1c5ac059e275fa2.png
+    keyword: gen_epic_cleric_head
+  gen_epic_rogue_legs:
+    displayName: Epic Rogue Greaves
+    description: Autogenerated epic-tier legs for this zone. Replace the name and description, then keep editing.
+    slot: legs
+    tier: epic
+    classes:
+      - ROGUE
+    level: 16
+    archetype: armor
+    armor: 6
+    image: 71b32a2951347f2384c8c03593b6d2cbe2ba0d6e8b3e43befda01eb65083a221.png
+    keyword: gen_epic_rogue_legs
+  gen_epic_ruler_feet:
+    displayName: Epic Ruler Boots
+    description: Autogenerated epic-tier feet for this zone. Replace the name and description, then keep editing.
+    slot: feet
+    tier: epic
+    classes:
+      - RULER
+    level: 16
+    archetype: armor
+    armor: 4
+    image: e1fc623d6ac2dec595227b20ce80295fd5633dc2658840630f4b9494c761e96a.png
+    keyword: gen_epic_ruler_feet
+  gen_rare_warrior_hands:
+    displayName: Rare Warrior Gauntlets
+    description: Autogenerated rare-tier hands for this zone. Replace the name and description, then keep editing.
+    slot: hands
+    tier: rare
+    classes:
+      - WARRIOR
+    level: 16
+    archetype: armor
+    armor: 4
+    image: e3b722a2fe07f8d1f9b31a3a01d96adde8475f3e4a2349ebbb8b5c7d4614583b.png
+    keyword: gen_rare_warrior_hands
+  gen_rare_warrior_weapon:
+    displayName: Rare Warrior Blade
+    description: Autogenerated rare-tier weapon for this zone. Replace the name and description, then keep editing.
+    slot: weapon
+    tier: rare
+    classes:
+      - WARRIOR
+    level: 16
+    archetype: damage
+    damage: 4
+    image: b97124f75d2c1e946775f9b2fe530c88299add07a531ba653128cffedad5b8ce.png
+    keyword: gen_rare_warrior_weapon
+  gen_rare_mage_chest:
+    displayName: Rare Mage Cuirass
+    description: Autogenerated rare-tier chest for this zone. Replace the name and description, then keep editing.
+    slot: chest
+    tier: rare
+    classes:
+      - MAGE
+    level: 16
+    archetype: armor
+    armor: 4
+    image: 02e53aa4b6fad01668399f8f5d22bac3256d153d96ecceff000bd2e447eddd12.png
+    keyword: gen_rare_mage_chest
+  gen_rare_mage_head:
+    displayName: Rare Mage Helm
+    description: Autogenerated rare-tier head for this zone. Replace the name and description, then keep editing.
+    slot: head
+    tier: rare
+    classes:
+      - MAGE
+    level: 16
+    archetype: armor
+    armor: 4
+    image: 77ecacdb88383bb035fc766a0351e7a3daf4ea94d9495a73e51139d159d1e39c.png
+    keyword: gen_rare_mage_head
+  gen_rare_cleric_legs:
+    displayName: Rare Cleric Greaves
+    description: Autogenerated rare-tier legs for this zone. Replace the name and description, then keep editing.
+    slot: legs
+    tier: rare
+    classes:
+      - CLERIC
+    level: 16
+    archetype: armor
+    armor: 5
+    image: b674e1ccb92645f0ec0d41ba5161c9348862485dbba026fc8413f576126b52d0.png
+    keyword: gen_rare_cleric_legs
+  gen_rare_cleric_feet:
+    displayName: Rare Cleric Boots
+    description: Autogenerated rare-tier feet for this zone. Replace the name and description, then keep editing.
+    slot: feet
+    tier: rare
+    classes:
+      - CLERIC
+    level: 16
+    archetype: armor
+    armor: 4
+    image: 1dc73b1cf6fd8bf69cff3ec97eb48199982ca87bf7509402dc0aaf825e5c5ecf.png
+    keyword: gen_rare_cleric_feet
+  gen_rare_rogue_hands:
+    displayName: Rare Rogue Gauntlets
+    description: Autogenerated rare-tier hands for this zone. Replace the name and description, then keep editing.
+    slot: hands
+    tier: rare
+    classes:
+      - ROGUE
+    level: 16
+    archetype: armor
+    armor: 4
+    image: b90a88d4b3d2d9a25ee4d628b06065a3dae745b432af69cfd62350a5b707e54a.png
+    keyword: gen_rare_rogue_hands
+  gen_rare_rogue_weapon:
+    displayName: Rare Rogue Blade
+    description: Autogenerated rare-tier weapon for this zone. Replace the name and description, then keep editing.
+    slot: weapon
+    tier: rare
+    classes:
+      - ROGUE
+    level: 16
+    archetype: damage
+    damage: 4
+    image: a268b37bf8210e5427f21f47a8c0ad6a8fee8dc4b800166273e4d41b2bc48317.png
+    keyword: gen_rare_rogue_weapon
+  gen_rare_ruler_chest:
+    displayName: Rare Ruler Cuirass
+    description: Autogenerated rare-tier chest for this zone. Replace the name and description, then keep editing.
+    slot: chest
+    tier: rare
+    classes:
+      - RULER
+    level: 16
+    archetype: armor
+    armor: 4
+    image: fe2dc7d5298e58a189fbd4ad5b364e2fc773a3be2a890e726204d8b4b5d95b9c.png
+    keyword: gen_rare_ruler_chest
+  gen_rare_ruler_head:
+    displayName: Rare Ruler Helm
+    description: Autogenerated rare-tier head for this zone. Replace the name and description, then keep editing.
+    slot: head
+    tier: rare
+    classes:
+      - RULER
+    level: 16
+    archetype: armor
+    armor: 4
+    image: 4e729a042b7d0ee27b2d437795bf71e23f8dca1f1d9e1be7b51d4c10250a0c80.png
+    keyword: gen_rare_ruler_head
+  gen_uncommon_legs:
+    displayName: Uncommon Greaves
+    description: Autogenerated uncommon-tier legs for this zone. Replace the name and description, then keep editing.
+    slot: legs
+    tier: uncommon
+    level: 16
+    archetype: armor
+    armor: 5
+    image: 442a3c5a99c69ba396079961d3ffbb59052f3fc8788424edeab01d327b412454.png
+    keyword: gen_uncommon_legs
+  gen_uncommon_feet:
+    displayName: Uncommon Boots
+    description: Autogenerated uncommon-tier feet for this zone. Replace the name and description, then keep editing.
+    slot: feet
+    tier: uncommon
+    level: 16
+    archetype: armor
+    armor: 3
+    image: 9dc09b36e26bf50df60234165d000c5be89296da6dd16dd616d66b6c9315085a.png
+    keyword: gen_uncommon_feet
+  gen_uncommon_hands:
+    displayName: Uncommon Gauntlets
+    description: Autogenerated uncommon-tier hands for this zone. Replace the name and description, then keep editing.
+    slot: hands
+    tier: uncommon
+    level: 16
+    archetype: armor
+    armor: 3
+    image: f7b3e66fe5d50924071f68d769aa0568466f42707aded9795a5503929f90f800.png
+    keyword: gen_uncommon_hands
+  gen_uncommon_weapon:
+    displayName: Uncommon Blade
+    description: Autogenerated uncommon-tier weapon for this zone. Replace the name and description, then keep editing.
+    slot: weapon
+    tier: uncommon
+    level: 16
+    archetype: damage
+    damage: 3
+    image: 6dc18a451f2544078970ccb23077d0fb78a7c2b284fc522a251dd4f785448ac0.png
+    keyword: gen_uncommon_weapon
+  gen_uncommon_chest:
+    displayName: Uncommon Cuirass
+    description: Autogenerated uncommon-tier chest for this zone. Replace the name and description, then keep editing.
+    slot: chest
+    tier: uncommon
+    level: 16
+    archetype: armor
+    armor: 3
+    image: 00f001caf6f868ddd975785095218c07850693e1bba3bab385ddaa5d53c3e087.png
+    keyword: gen_uncommon_chest
+  gen_uncommon_head:
+    displayName: Uncommon Helm
+    description: Autogenerated uncommon-tier head for this zone. Replace the name and description, then keep editing.
+    slot: head
+    tier: uncommon
+    level: 16
+    archetype: armor
+    armor: 3
+    image: 02753949e26e2d756cf936b15c52067284a70927eecbecd3f02dd07c476da760.png
+    keyword: gen_uncommon_head
+  gen_common_legs:
+    displayName: Common Greaves
+    description: Autogenerated common-tier legs for this zone. Replace the name and description, then keep editing.
+    slot: legs
+    tier: common
+    level: 15
+    archetype: armor
+    armor: 4
+    image: c98375a7f5149196e2fd6c3d1d11674b3a57f323d5778427f1fd06f5e7358571.png
+    keyword: gen_common_legs
+  gen_common_feet:
+    displayName: Common Boots
+    description: Autogenerated common-tier feet for this zone. Replace the name and description, then keep editing.
+    slot: feet
+    tier: common
+    level: 15
+    archetype: armor
+    armor: 3
+    image: 74dec97731820af9fd2e826dc8d83c2c301194bbf911350a8b57e693f51df74b.png
+    keyword: gen_common_feet
+  gen_common_hands:
+    displayName: Common Gauntlets
+    description: Autogenerated common-tier hands for this zone. Replace the name and description, then keep editing.
+    slot: hands
+    tier: common
+    level: 15
+    archetype: armor
+    armor: 3
+    image: fcfd2764175cb798c1cddb128296be5e450d9887a012a2da35475e0e277e8772.png
+    keyword: gen_common_hands

@@ -1,0 +1,11 @@
+---
+ownerId: 1
+ownerName: "Ambuoroko"
+ownerNameLower: "ambuoroko"
+rooms:
+- templateId: "entry_room"
+  customTitle: null
+  customDescription: null
+  exits: {}
+  storedItems: []
+createdAtEpochMs: 1780965696543
